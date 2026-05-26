@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#fafaf7">
+<title>Bangkok · 6.12 — 6.16</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" defer></script>
+<style>
+:root {
+  --bg: #fafaf7;
+  --surface: #ffffff;
+  --text: #1a1a1a;
+  --muted: #8a8a82;
+  --soft: #b8b7b0;
+  --line: #ebeae3;
+  --line-strong: #d8d6cc;
+  --rest-bg: #f3f2eb;
+  --danger: #b04a3a;
+  --topnav-h: 56px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+body {
+  font-family: 'IBM Plex Sans KR', -apple-system, sans-serif;
+  font-weight: 400;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  padding-top: var(--topnav-h);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ============ Top Nav (가로 탭) ============ */
+.topnav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--topnav-h);
+  background: rgba(250, 250, 247, 0.92);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--line);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.tab-nav { display: flex; gap: 28px; }
+.tab-nav-item {
+  font-size: 13px;
+  color: var(--soft);
+  padding: 6px 2px;
+  position: relative;
+  cursor: pointer;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: color 0.15s;
+}
+@media (hover: hover) { .tab-nav-item:hover { color: var(--muted); } }
+.tab-nav-item.active { color: var(--text); font-weight: 500; }
+.tab-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 1px;
+  background: var(--text);
+}
+
+/* ============ Link Edit ============ */
+.link-edit-btn {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--soft);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.link-edit-btn:hover { color: var(--text); }
+.link-edit-form {
+  display: flex; flex-direction: column;
+  gap: 8px; margin-top: 10px;
+  padding: 12px;
+  background: var(--rest-bg);
+  border-radius: 2px;
+}
+.link-edit-form input {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  background: white;
+  font-family: inherit; font-size: 12px;
+  padding: 8px 10px;
+  outline: none; border-radius: 2px;
+}
+.link-edit-form input:focus { border-color: var(--text); }
+.link-edit-buttons {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.link-edit-save {
+  background: var(--text); color: var(--bg); border: none;
+  font-family: 'Fraunces', serif; font-style: italic;
+  font-size: 12px; padding: 6px 14px; cursor: pointer;
+}
+.link-edit-cancel {
+  background: none; border: none; color: var(--muted);
+  font-family: 'Fraunces', serif; font-style: italic;
+  font-size: 12px; cursor: pointer; padding: 6px 8px;
+}
+.link-edit-hint {
+  font-size: 10px; color: var(--soft); margin-left: auto;
+}
+
+/* ============ Event card (Plan) ============ */
+.event {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border-bottom: 1px dashed var(--line);
+  background: var(--bg);
+}
+.event:last-child { border-bottom: none; }
+
+.event-content {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 16px;
+  padding: 14px 0;
+  background: var(--bg);
+  position: relative;
+  z-index: 2;
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1);
+  touch-action: pan-y;
+}
+.event.swipe-open .event-content { transform: translateX(-92px); }
+
+@media (hover: hover) {
+  .event:hover .event-content { background: var(--rest-bg); }
+}
+
+.event-swipe-action {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 92px;
+  background: var(--danger);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 1;
+  letter-spacing: 0.02em;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.event.swipe-open .event-swipe-action { transform: translateX(0); }
+
+.event-cat-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-left: 8px;
+  vertical-align: middle;
+  position: relative; top: -2px;
+}
+
+/* Sortable states */
+.sortable-ghost { opacity: 0.3; }
+.sortable-chosen .event-content { background: var(--rest-bg); }
+.sortable-drag {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.15);
+  background: var(--surface);
+  border-radius: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+@media (max-width: 480px) {
+  .event-content { grid-template-columns: 56px 1fr; gap: 14px; }
+}
+
+.add-event-btn {
+  display: block;
+  width: 100%;
+  margin: 16px 0 0;
+  padding: 13px;
+  background: none;
+  border: 1px dashed var(--line-strong);
+  color: var(--muted);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+.add-event-btn:hover {
+  border-color: var(--text);
+  color: var(--text);
+  background: var(--rest-bg);
+}
+
+.add-place-btn {
+  display: block;
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 13px;
+  background: none;
+  border: 1px dashed var(--line-strong);
+  color: var(--muted);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+.add-place-btn:hover {
+  border-color: var(--text);
+  color: var(--text);
+  background: var(--rest-bg);
+}
+
+.unplanned-item { cursor: pointer; }
+
+.dir-group-count {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--soft);
+  margin-left: 8px;
+  letter-spacing: 0.05em;
+}
+
+.empty-notice {
+  padding: 24px 0;
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+/* ============ Modal ============ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.5);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.modal-backdrop.open { display: flex; opacity: 1; }
+.modal {
+  background: var(--bg);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: 4px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 22px;
+}
+.modal-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 30px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.modal-field { margin-bottom: 16px; }
+.modal-label {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+.modal-input,
+.modal-textarea,
+.modal-select {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  background: white;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 9px 12px;
+  outline: none;
+  border-radius: 2px;
+  color: var(--text);
+}
+.modal-input:focus,
+.modal-textarea:focus,
+.modal-select:focus { border-color: var(--text); }
+.modal-textarea { resize: vertical; min-height: 60px; }
+.modal-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%238a8a82' fill='none' stroke-width='1'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 30px;
+}
+.modal-hint {
+  font-size: 11px;
+  color: var(--soft);
+  margin-top: 5px;
+  font-style: italic;
+  font-family: 'Fraunces', serif;
+}
+.modal-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 26px;
+  align-items: center;
+}
+.modal-save {
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  padding: 10px 24px;
+  cursor: pointer;
+}
+.modal-cancel {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 10px 14px;
+}
+.modal-delete {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 10px 14px;
+  margin-left: auto;
+}
+
+@media (max-width: 480px) {
+  .tab-nav { gap: 18px; }
+  .tab-nav-item { font-size: 12px; }
+}
+@media (max-width: 380px) {
+  .tab-nav { gap: 12px; }
+  .tab-nav-item { font-size: 11px; letter-spacing: 0; }
+}
+
+/* ============ Side Menu (Full Overlay) ============ */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  padding: var(--topnav-h) 24px 60px;
+  overflow-y: auto;
+}
+.menu-overlay.open { opacity: 1; pointer-events: auto; }
+
+.menu-close {
+  position: absolute;
+  top: 14px;
+  right: 22px;
+  background: none;
+  border: none;
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 34px;
+  color: var(--text);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.menu-list {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item {
+  display: flex;
+  align-items: baseline;
+  gap: 22px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--text);
+  transition: padding 0.2s ease;
+}
+.menu-item:active, .menu-item.active { padding-left: 8px; }
+@media (hover: hover) { .menu-item:hover { padding-left: 8px; } }
+
+.menu-item-num {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--soft);
+  letter-spacing: 0.05em;
+  min-width: 24px;
+}
+.menu-item-label {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 38px;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+.menu-item.active .menu-item-label { font-style: italic; }
+
+.menu-foot {
+  margin-top: auto;
+  padding-top: 40px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--soft);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ============ Container ============ */
+.container { max-width: 680px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* ============ Tabs ============ */
+.tab { display: none; }
+.tab.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ============ Headings ============ */
+.section-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 42px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 28px;
+}
+.section { margin-bottom: 56px; }
+
+/* ============ Map Tab ============ */
+.hero-dday {
+  text-align: center;
+  padding: 24px 0 40px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 40px;
+}
+.hero-kicker {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+.hero-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: clamp(56px, 14vw, 88px);
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+  margin-bottom: 22px;
+}
+.hero-dates {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.18em;
+}
+.hero-dday-badge {
+  display: inline-block;
+  margin-top: 24px;
+  padding: 7px 18px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  font-weight: 500;
+}
+
+.stay-card { padding: 20px 0 24px; border-bottom: 1px solid var(--line); }
+.stay-name { font-family: 'Fraunces', serif; font-weight: 400; font-size: 22px; margin-bottom: 8px; }
+.stay-meta { color: var(--muted); font-size: 13px; margin-bottom: 14px; line-height: 1.5; }
+
+.map-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  overflow: hidden;
+  margin-top: 32px;
+}
+#leafletMap { width: 100%; height: 100%; background: var(--bg); }
+
+/* Custom marker */
+.custom-pin { background: none !important; border: none !important; }
+.custom-pin-wrap {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  transition: transform 0.15s;
+}
+.custom-pin-wrap:hover { transform: scale(1.4); }
+
+/* Popup overrides */
+.leaflet-popup-content-wrapper {
+  border-radius: 2px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  font-family: 'IBM Plex Sans KR', sans-serif;
+}
+.leaflet-popup-tip { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.leaflet-popup-content { margin: 14px 16px; font-size: 13px; line-height: 1.55; min-width: 180px; }
+.pop-name { font-weight: 500; font-size: 14px; margin-bottom: 4px; color: var(--text); }
+.pop-cat {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.pop-note { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+.pop-link {
+  font-size: 11px; color: var(--text); text-decoration: none;
+  border-bottom: 1px solid currentColor; padding-bottom: 1px;
+  letter-spacing: 0.02em;
+}
+
+/* Legend */
+.map-legend {
+  position: absolute;
+  bottom: 12px; left: 12px;
+  background: rgba(255,255,255,0.94);
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  z-index: 400;
+  pointer-events: none;
+}
+.legend-item { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* Leaflet attribution */
+.leaflet-control-attribution {
+  font-size: 9px !important;
+  background: rgba(255,255,255,0.8) !important;
+}
+
+.map-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--text); text-decoration: none;
+  padding: 6px 12px; border: 1px solid var(--line-strong);
+  border-radius: 100px; letter-spacing: 0.02em;
+  transition: all 0.18s ease;
+}
+.map-link:active { background: var(--text); color: var(--bg); border-color: var(--text); }
+@media (hover: hover) { .map-link:hover { background: var(--text); color: var(--bg); border-color: var(--text); } }
+
+/* ============ Plan Tab ============ */
+.day { border-top: 1px solid var(--line-strong); padding: 32px 0 24px; }
+.day:last-of-type { border-bottom: 1px solid var(--line-strong); }
+.day-header { display: flex; align-items: baseline; gap: 18px; margin-bottom: 6px; }
+.day-num { font-family: 'Fraunces', serif; font-weight: 300; font-size: 44px; letter-spacing: -0.03em; line-height: 1; }
+.day-date { font-size: 11px; color: var(--muted); letter-spacing: 0.15em; }
+.day-theme { font-family: 'Fraunces', serif; font-style: italic; font-weight: 300; color: var(--muted); font-size: 17px; margin-bottom: 26px; }
+.event-time { font-family: 'Fraunces', serif; font-size: 13px; color: var(--muted); padding-top: 3px; }
+.event-name { font-size: 15px; font-weight: 500; }
+.event-note { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.55; }
+
+.editable {
+  border-radius: 2px;
+  transition: background 0.15s;
+  cursor: text;
+  outline: none;
+  padding: 1px 3px;
+  margin: -1px -3px;
+}
+.editable:hover { background: var(--rest-bg); }
+.editable:focus { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); }
+
+.rest {
+  padding: 18px 16px; background: var(--rest-bg);
+  font-family: 'Fraunces', serif; font-style: italic; font-weight: 300;
+  color: var(--muted); text-align: center; font-size: 14px;
+  margin: 14px 0;
+}
+.rest-time {
+  display: block; font-family: 'IBM Plex Sans KR', sans-serif;
+  font-style: normal; font-size: 10px; letter-spacing: 0.2em;
+  margin-bottom: 4px; color: var(--soft);
+}
+
+.edit-hint {
+  margin-top: 24px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--soft);
+  text-align: center;
+}
+
+/* ============ Checklist Tab ============ */
+.checklist-add {
+  display: flex; gap: 8px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line-strong);
+  margin-bottom: 4px;
+}
+.checklist-add input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text);
+  padding: 8px 0;
+  outline: none;
+  border-bottom: 1px solid transparent;
+}
+.checklist-add input::placeholder { color: var(--soft); }
+.checklist-add input:focus { border-bottom-color: var(--text); }
+.checklist-add button {
+  background: var(--text); color: var(--bg); border: none;
+  font-family: 'Fraunces', serif; font-style: italic; font-size: 14px;
+  padding: 6px 18px; cursor: pointer;
+}
+
+.checklist-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 4px; border-bottom: 1px solid var(--line);
+  user-select: none;
+}
+.check-area { display: flex; align-items: flex-start; gap: 14px; flex: 1; cursor: pointer; }
+.checkbox {
+  width: 20px; height: 20px;
+  border: 1px solid var(--text);
+  flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s; border-radius: 2px;
+}
+.checklist-item.checked .checkbox { background: var(--text); }
+.checklist-item.checked .checkbox::after {
+  content: ''; width: 6px; height: 10px;
+  border: solid var(--bg); border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+.checklist-text { font-size: 15px; flex: 1; transition: color 0.15s; line-height: 1.5; }
+.checklist-item.checked .checklist-text {
+  color: var(--soft);
+  text-decoration: line-through;
+  text-decoration-color: var(--soft);
+}
+.item-delete {
+  background: none; border: none; color: var(--soft);
+  font-size: 18px; cursor: pointer; padding: 4px 8px;
+  font-family: 'Fraunces', serif; opacity: 0;
+  transition: opacity 0.2s;
+}
+.checklist-item:hover .item-delete,
+.budget-item:hover .item-delete { opacity: 1; }
+@media (max-width: 768px) {
+  .item-delete { opacity: 0.5; }
+}
+.item-delete:hover { color: var(--danger); }
+
+/* ============ Budget Tab ============ */
+.budget-config {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line-strong);
+  margin-bottom: 8px;
+}
+.budget-config-label { font-size: 13px; color: var(--muted); }
+.budget-config input {
+  width: 60px;
+  border: none; border-bottom: 1px solid var(--text);
+  background: transparent;
+  text-align: right;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+  padding: 4px 0;
+}
+
+.budget-form {
+  display: grid;
+  gap: 10px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+.budget-form-row { display: grid; grid-template-columns: 1fr 110px; gap: 10px; }
+.budget-form input[type="text"],
+.budget-form input[type="number"],
+.budget-form select {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  font-family: inherit; font-size: 14px; color: var(--text);
+  padding: 9px 12px; outline: none;
+  border-radius: 2px;
+  -webkit-appearance: none; appearance: none;
+}
+.budget-form input:focus, .budget-form select:focus { border-color: var(--text); }
+.budget-form input[type="number"] { text-align: right; }
+.budget-form select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%238a8a82' fill='none' stroke-width='1'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 30px;
+}
+.split-toggle {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: var(--muted);
+  user-select: none; cursor: pointer;
+  padding: 4px 0;
+}
+.split-toggle .mini-check {
+  width: 16px; height: 16px;
+  border: 1px solid var(--text);
+  border-radius: 2px;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.split-toggle.on .mini-check { background: var(--text); }
+.split-toggle.on .mini-check::after {
+  content: ''; width: 5px; height: 8px;
+  border: solid var(--bg); border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+.budget-add-btn {
+  background: var(--text); color: var(--bg); border: none;
+  font-family: 'Fraunces', serif; font-style: italic;
+  font-size: 15px; padding: 11px; cursor: pointer;
+  letter-spacing: 0.02em;
+}
+
+.budget-list { margin-bottom: 32px; }
+.budget-empty {
+  padding: 40px 16px; text-align: center;
+  font-family: 'Fraunces', serif; font-style: italic;
+  color: var(--soft); font-size: 14px;
+}
+.budget-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.bi-info { min-width: 0; }
+.bi-name { font-size: 15px; font-weight: 500; }
+.bi-meta { font-size: 11px; color: var(--muted); margin-top: 3px; letter-spacing: 0.02em; }
+.bi-tag {
+  display: inline-block;
+  padding: 1px 8px; margin-right: 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 100px;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+.bi-tag.corp { border-color: var(--text); color: var(--text); }
+.bi-tag.split-on { background: var(--rest-bg); }
+.bi-amount {
+  font-family: 'Fraunces', serif;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+
+.budget-summary {
+  border-top: 2px solid var(--text);
+  padding-top: 24px;
+}
+.summary-total {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 18px; border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+.summary-total-label { font-size: 13px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+.summary-total-value {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.summary-row {
+  display: flex; justify-content: space-between;
+  padding: 10px 0;
+  font-size: 14px;
+}
+.summary-row-label { color: var(--muted); }
+.summary-row-value { font-variant-numeric: tabular-nums; }
+.summary-per-person {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--rest-bg);
+  text-align: center;
+}
+.spp-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.spp-value {
+  font-family: 'Fraunces', serif;
+  font-size: 36px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.spp-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+  letter-spacing: 0.05em;
+}
+
+/* ============ Notes Tab ============ */
+.dir-group { margin-bottom: 36px; }
+.dir-group-title { font-family: 'Fraunces', serif; font-style: italic; font-size: 16px; margin-bottom: 4px; color: var(--muted); }
+.dir-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 0; border-bottom: 1px solid var(--line);
+  text-decoration: none; color: var(--text);
+  transition: padding 0.18s;
+}
+.dir-item:active { padding-left: 6px; }
+@media (hover: hover) { .dir-item:hover { padding-left: 6px; } }
+.dir-item-info { flex: 1; padding-right: 12px; }
+.dir-item-name { font-size: 15px; font-weight: 500; }
+.dir-item-note { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.dir-item-arrow { font-family: 'Fraunces', serif; color: var(--soft); font-size: 22px; font-weight: 300; }
+
+.tip { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.tip:last-child { border-bottom: none; }
+.tip-label { font-family: 'Fraunces', serif; font-style: italic; font-size: 13px; color: var(--muted); margin-bottom: 5px; }
+.tip-body { font-size: 14px; line-height: 1.65; }
+
+/* ============ Footer ============ */
+.footer-mark {
+  margin-top: 60px;
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+@media (max-width: 480px) {
+  .container { padding: 28px 22px 70px; }
+  .section { margin-bottom: 48px; }
+  .section-title { font-size: 34px; }
+  .event { grid-template-columns: 56px 1fr; gap: 14px; }
+  .day-num { font-size: 40px; }
+  .hero-title { font-size: 64px; }
+  .menu-item-label { font-size: 34px; }
+  .budget-form-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ Top Nav ============ -->
+<header class="topnav">
+  <nav class="tab-nav">
+    <a href="#" class="tab-nav-item active" data-tab="map">Map</a>
+    <a href="#" class="tab-nav-item" data-tab="plan">Plan</a>
+    <a href="#" class="tab-nav-item" data-tab="checklist">Checklist</a>
+    <a href="#" class="tab-nav-item" data-tab="budget">Budget</a>
+    <a href="#" class="tab-nav-item" data-tab="notes">Notes</a>
+  </nav>
+</header>
+
+<div class="container">
+
+<!-- ============ TAB: Map ============ -->
+<section class="tab active" data-tab="map">
+  <div class="hero-dday">
+    <div class="hero-kicker">a quiet itinerary —</div>
+    <h1 class="hero-title">Bangkok</h1>
+    <div class="hero-dates">06.12 &nbsp;—&nbsp; 06.16 &nbsp;·&nbsp; 2026</div>
+    <div class="hero-dday-badge" id="dday">D - ?</div>
+  </div>
+
+  <div class="section-label">stay</div>
+  <div class="stay-card">
+    <div class="stay-name">The Sukhothai Bangkok</div>
+    <div class="stay-meta">13/3 S Sathon Rd, Sathon<br>BTS Chong Nonsi · MRT Lumphini 도보권</div>
+    <a href="https://www.google.com/maps/place/?q=place_id:ChIJPfeHijq44jARW7bwbPBz3v4" class="map-link" target="_blank" rel="noopener">↗ 지도</a>
+  </div>
+
+  <div style="margin-top:40px">
+    <div class="section-label">overview</div>
+    <div class="map-frame">
+      <div id="leafletMap"></div>
+      <div class="map-legend" id="mapLegend"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB: Plan ============ -->
+<section class="tab" data-tab="plan">
+  <div class="section-label">itinerary</div>
+  <h2 class="section-title">five days</h2>
+  <div id="planContainer"></div>
+  <div class="edit-hint">이벤트를 탭해서 편집 · 자동 저장</div>
+</section>
+
+<!-- ============ TAB: Checklist ============ -->
+<section class="tab" data-tab="checklist">
+  <div class="section-label">before you go</div>
+  <h2 class="section-title">checklist</h2>
+
+  <div class="checklist-add">
+    <input type="text" id="newCheckInput" placeholder="새 항목 추가...">
+    <button id="addCheckBtn">add</button>
+  </div>
+
+  <div id="checklistContainer"></div>
+</section>
+
+<!-- ============ TAB: Budget ============ -->
+<section class="tab" data-tab="budget">
+  <div class="section-label">expenses</div>
+  <h2 class="section-title">budget</h2>
+
+  <div class="budget-config">
+    <span class="budget-config-label">인원 (인당 계산용)</span>
+    <input type="number" id="peopleCount" value="2" min="1" max="20">
+  </div>
+
+  <div class="budget-form">
+    <input type="text" id="bName" placeholder="비용 이름 (예: 수코타이 1박)">
+    <div class="budget-form-row">
+      <input type="number" id="bAmount" placeholder="금액 (원)" inputmode="numeric">
+      <select id="bPayment">
+        <option value="corp_card">법인카드</option>
+        <option value="personal_card">개인카드</option>
+        <option value="cash">개인현금</option>
+      </select>
+    </div>
+    <label class="split-toggle on" id="splitToggle">
+      <span class="mini-check"></span>
+      <span>인당 비용 계산에 포함</span>
+    </label>
+    <button class="budget-add-btn" id="addBudgetBtn">add expense</button>
+  </div>
+
+  <div class="budget-list" id="budgetList"></div>
+
+  <div class="budget-summary" id="budgetSummary"></div>
+</section>
+
+<!-- ============ TAB: Notes ============ -->
+<section class="tab" data-tab="notes">
+  <div class="section-label">directory</div>
+  <h2 class="section-title">places</h2>
+
+  <div id="placesContainer"></div>
+
+  <div style="margin-top: 64px">
+    <div class="section-label">notes</div>
+    <h2 class="section-title">small things</h2>
+    <div class="tip"><div class="tip-label">on heat —</div><div class="tip-body">12 ~ 16시는 가장 더운 시간. 무조건 호텔. 외출은 7~10시, 17시 이후.</div></div>
+    <div class="tip"><div class="tip-label">on rain —</div><div class="tip-body">6월은 우기. 스콜은 보통 1시간 안에 끝남. 작은 우산이면 충분.</div></div>
+    <div class="tip"><div class="tip-label">on transport —</div><div class="tip-body">러시아워는 평일 7~9시, 16~19시. 이 시간엔 BTS · MRT가 그랩보다 빠름.</div></div>
+    <div class="tip"><div class="tip-label">on tipping —</div><div class="tip-body">마사지는 50~100밧 정도. 식당은 봉사료 포함이라 별도 팁 안 줘도 OK.</div></div>
+    <div class="tip"><div class="tip-label">on dress code —</div><div class="tip-body">사원 가는 일정은 없지만, 혹시 들르면 어깨 · 무릎 가리기. 루프탑 바는 캐주얼 OK.</div></div>
+  </div>
+
+  <div class="footer-mark">travel well, come back rested.</div>
+</section>
+
+</div>
+
+<!-- ============ Event Modal ============ -->
+<div class="modal-backdrop" id="eventModal" role="dialog" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitle">이벤트 편집</h3>
+      <button class="modal-close" id="modalClose" aria-label="close">×</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="m_time">시간</label>
+      <input class="modal-input" type="text" id="m_time" placeholder="예: 09:00 또는 PM">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="m_name">이름</label>
+      <input class="modal-input" type="text" id="m_name" placeholder="장소 또는 활동">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="m_note">메모 (선택)</label>
+      <textarea class="modal-textarea" id="m_note" rows="2" placeholder="..."></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="m_url">구글맵 URL (선택)</label>
+      <input class="modal-input" type="url" id="m_url" placeholder="https://www.google.com/maps/...">
+      <div class="modal-hint">URL에 @위도,경도 있으면 지도 핀에 자동 반영</div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="m_cat">카테고리 (지도 핀 색상)</label>
+      <select class="modal-select" id="m_cat">
+        <option value="">— 없음 —</option>
+        <option value="hotel">호텔</option>
+        <option value="cafe">카페</option>
+        <option value="bar">바·재즈</option>
+        <option value="food">맛집</option>
+        <option value="market">시장·쇼핑</option>
+        <option value="massage">마사지</option>
+      </select>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-save" id="modalSave" type="button">저장</button>
+      <button class="modal-cancel" id="modalCancel" type="button">취소</button>
+      <button class="modal-delete" id="modalDelete" type="button">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Place Modal ============ -->
+<div class="modal-backdrop" id="placeModal" role="dialog" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="placeModalTitle">장소 편집</h3>
+      <button class="modal-close" id="placeModalClose" aria-label="close">×</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="p_name">이름</label>
+      <input class="modal-input" type="text" id="p_name" placeholder="예: Patom Organic Living">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="p_note">메모 (선택)</label>
+      <textarea class="modal-textarea" id="p_note" rows="2"></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="p_url">구글맵 URL (선택)</label>
+      <input class="modal-input" type="url" id="p_url" placeholder="https://www.google.com/maps/...">
+      <div class="modal-hint">URL에 @위도,경도 있으면 지도 핀에 자동 반영</div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="p_cat">카테고리</label>
+      <select class="modal-select" id="p_cat">
+        <option value="">— 없음 —</option>
+        <option value="hotel">호텔</option>
+        <option value="cafe">카페</option>
+        <option value="bar">바·재즈</option>
+        <option value="food">맛집</option>
+        <option value="market">시장·쇼핑</option>
+        <option value="massage">마사지</option>
+      </select>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-save" id="placeModalSave" type="button">저장</button>
+      <button class="modal-cancel" id="placeModalCancel" type="button">취소</button>
+      <button class="modal-delete" id="placeModalDelete" type="button">삭제</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Places Data ----------
+const CATEGORIES = {
+  hotel:   { label: '호텔',      color: '#1a1a1a' },
+  cafe:    { label: '카페',      color: '#a06a3c' },
+  bar:     { label: '바·재즈',   color: '#7a4e6e' },
+  food:    { label: '맛집',      color: '#6b7d4a' },
+  market:  { label: '시장·쇼핑', color: '#4a6577' },
+  massage: { label: '마사지',    color: '#b88020' },
+};
+
+// 일정 외 장소 (사용자 편집 가능)
+const DEFAULT_PLACES = [
+  { id: 'sukhothai',  name: 'The Sukhothai Bangkok', cat: 'hotel',  lat: 13.7229783, lng: 100.5408690, note: '🏨 우리 호텔', url: 'https://www.google.com/maps/place/?q=place_id:ChIJPfeHijq44jARW7bwbPBz3v4' },
+  { id: 'healthland', name: 'Health Land Sathon', cat: 'massage', lat: 13.7213709, lng: 100.5262333, note: '2시간 800밧대. 호텔 도보.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJTyjRrs2Y4jARAx3zbZs6rOM' },
+  { id: 'asiaherb',   name: 'Asia Herb Association', cat: 'massage', lat: 13.7260032, lng: 100.5676092, note: '프롬퐁. Day 4 가는 길에 들르기 좋음.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJOwsnQASf4jAR_no5JyVXV1s' },
+];
+
+const PLACES_KEY = 'bk-places-v3';
+function loadPlaces() {
+  try {
+    const saved = localStorage.getItem(PLACES_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_PLACES));
+}
+function savePlaces() { localStorage.setItem(PLACES_KEY, JSON.stringify(PLACES)); }
+let PLACES = loadPlaces();
+
+// 기본 일정 데이터
+const DEFAULT_PLAN = [
+  {
+    day: 1, label: '01', date: 'THU · 06.12', theme: 'arrival, gently',
+    events: [
+      { id: 'd1e1', time: 'PM', name: '호텔 체크인 + 풀', note: '도착 후 적응. 책 한 권 들고 풀사이드.', url: '', cat: '', lat: null, lng: null },
+      { id: 'd1e2', time: '19:00', name: '사톤 근처 가벼운 저녁', note: '', url: '', cat: '', lat: null, lng: null },
+      { id: 'd1e3', time: '21:00', name: '마사지 → 일찍 잠', note: '비행 피로 풀기', url: '', cat: 'massage', lat: null, lng: null },
+    ]
+  },
+  {
+    day: 2, label: '02', date: 'FRI · 06.13', theme: '송왓, 탈랏노이, 그리고 올드타운의 밤',
+    events: [
+      { id: 'd2e1', time: '07:00', name: '호텔 출발 · 그랩', note: '러시아워 피해서 일찍.', url: '', cat: '', lat: null, lng: null },
+      { id: 'd2e2', time: '09:00', name: 'SCR — Song Wat Coffee Roasters', note: '더티라떼 시그니처. 빈티지 콘크리트 감성.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJoyc8PkeZ4jARw5Sv4vbnFhE', cat: 'cafe', lat: 13.7391467, lng: 100.5066564 },
+      { id: 'd2e3', time: '10:30', name: 'Mother Roaster — Talat Noi', note: '2층 옛 태국집. 할머니가 직접 내려주는 커피. 골목 그래피티 산책.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJ1bQYQayZ4jARpphLAIGHblQ', cat: 'cafe', lat: 13.7329909, lng: 100.5123218 },
+      { id: 'd2rest', time: '12:00 — 16:00', name: 'hotel · pool · book', note: '', url: '', cat: '', lat: null, lng: null },
+      { id: 'd2e4', time: '16:30', name: '마사지', note: '', url: '', cat: 'massage', lat: null, lng: null },
+      { id: 'd2e5', time: '19:00', name: '저녁 — 호텔 또는 사톤', note: '', url: '', cat: '', lat: null, lng: null },
+      { id: 'd2e6', time: '20:00', name: 'Leelabar', note: '올드타운 4층 루프탑. 히든 젬.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJlb8hgcCZ4jARuePQi0g9oN4', cat: 'bar', lat: 13.7490416, lng: 100.5045911 },
+      { id: 'd2e7', time: '21:30', name: 'The One Khaosan — 분위기만', note: '도보 10분. 가격 바꿔치기 후기 있으니 주의.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJqUczUW2Z4jARDp-Hi36LAFk', cat: 'bar', lat: 13.7592095, lng: 100.4968991 },
+    ]
+  },
+  {
+    day: 3, label: '03', date: 'SAT · 06.14', theme: '호텔 중심의, 가장 게으른 하루',
+    events: [
+      { id: 'd3e1', time: '08:00', name: 'tarns coffee', note: '호텔 도보 10분. 일본풍 미니멀. 책 읽기 좋음.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJub6OZACf4jARcRjVx75grFs', cat: 'cafe', lat: 13.7220819, lng: 100.5370481 },
+      { id: 'd3e2', time: '09:30', name: '룸피니 파크 산책', note: '호텔 바로 옆. 아침 공기.', url: '', cat: '', lat: null, lng: null },
+      { id: 'd3rest', time: '12:00 — 17:00', name: 'hotel · pool · book · nap', note: '', url: '', cat: '', lat: null, lng: null },
+      { id: 'd3e3', time: '17:00', name: '마사지', note: '', url: '', cat: 'massage', lat: null, lng: null },
+      { id: 'd3e4', time: '19:00', name: '사톤 근처 저녁', note: '', url: '', cat: '', lat: null, lng: null },
+      { id: 'd3e5', time: '20:30', name: "Maggie Choo's 🎷", note: '그랩 5~10분. 1930년대 상하이 비밀 클럽 컨셉. 라이브 재즈. 토요일은 예약 권장.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJ68V6JtOY4jAREx42-cvq9R0', cat: 'bar', lat: 13.7230861, lng: 100.5184222 },
+    ]
+  },
+  {
+    day: 4, label: '04', date: 'SUN · 06.15', theme: '수쿰빗으로, 한 번',
+    events: [
+      { id: 'd4e1', time: '09:00', name: 'Rung Rueang Pork Noodles', note: 'BTS Phrom Phong. 미슐랭 빕구르망 폭누들. 100밧 가성비.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJMwKZPwGf4jARkgykQtmIoM8', cat: 'food', lat: 13.7284371, lng: 100.5706724 },
+      { id: 'd4e2', time: '10:30', name: '근처 카페 한 군데', note: 'Phrom Phong 일대.', url: '', cat: 'cafe', lat: null, lng: null },
+      { id: 'd4rest', time: '12:00 — 16:00', name: 'hotel · pool · book', note: '', url: '', cat: '', lat: null, lng: null },
+      { id: 'd4e3', time: '16:00', name: '마사지', note: '', url: '', cat: 'massage', lat: null, lng: null },
+      { id: 'd4e4', time: '17:30', name: 'Sanctuary Bangkok', note: 'BTS Ekkamai. InterContinental 34층 루프탑. 노을 시간 맞춰서.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJ7UCSGJmf4jARfePMK8tF_2A', cat: 'bar', lat: 13.7224183, lng: 100.5814021 },
+      { id: 'd4e5', time: '19:30', name: 'SW1 Market', note: 'BTS Asok. 야시장, 라이브 음악 캐주얼 저녁.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJMSSVbwCf4jARMQeZPaFCjGo', cat: 'market', lat: 13.7380449, lng: 100.5584149 },
+    ]
+  },
+  {
+    day: 5, label: '05', date: 'MON · 06.16', theme: '마무리, 천천히',
+    events: [
+      { id: 'd5e1', time: '07:00', name: 'Dusit Central Park 옥상 가든', note: '호텔 도보. 6AM 오픈. 사람 없을 때 룸피니 뷰.', url: 'https://www.google.com/maps/place/?q=place_id:ChIJe0H3CRSf4jAR_zOGf06ufiw', cat: 'market', lat: 13.7287601, lng: 100.5375563 },
+      { id: 'd5e2', time: '09:00', name: '호텔 조식 · 짐 정리', note: '', url: '', cat: '', lat: null, lng: null },
+      { id: 'd5e3', time: '12:00', name: '체크아웃 → 공항', note: '수완나품 차 30분.', url: '', cat: '', lat: null, lng: null },
+    ]
+  },
+];
+
+// ---------- Plan persistence ----------
+const PLAN_KEY = 'bk-plan-v2';
+function loadPlan() {
+  try {
+    const saved = localStorage.getItem(PLAN_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_PLAN));
+}
+function savePlan() {
+  localStorage.setItem(PLAN_KEY, JSON.stringify(PLAN));
+  if (typeof renderPlaces === 'function') renderPlaces();
+}
+let PLAN = loadPlan();
+
+// Map에 표시할 모든 장소 = PLACES + PLAN 이벤트(좌표 있는 것)
+function getAllMapPlaces() {
+  const result = PLACES.filter(p => p.lat != null && p.lng != null);
+  const seen = new Set(result.map(p => p.lat + ',' + p.lng));
+  PLAN.forEach(day => {
+    day.events.forEach(ev => {
+      if (ev.lat == null || ev.lng == null) return;
+      const k = ev.lat + ',' + ev.lng;
+      if (seen.has(k)) return;
+      seen.add(k);
+      result.push({
+        id: ev.id, name: ev.name, cat: ev.cat || 'hotel',
+        lat: ev.lat, lng: ev.lng, note: ev.note, url: ev.url,
+      });
+    });
+  });
+  return result;
+}
+
+// ---------- Leaflet Map ----------
+let leafletMap = null;
+let initialBoundsSet = false;
+
+function initMap() {
+  if (leafletMap) return;
+  if (typeof L === 'undefined') { setTimeout(initMap, 100); return; }
+
+  leafletMap = L.map('leafletMap', {
+    scrollWheelZoom: false,
+    tap: true,
+  }).setView([13.735, 100.535], 12);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OSM &copy; CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(leafletMap);
+
+  renderMarkers();
+
+  // Legend (only once)
+  const legend = document.getElementById('mapLegend');
+  legend.innerHTML = Object.values(CATEGORIES).map(v => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${v.color}"></div>
+      <span>${v.label}</span>
+    </div>
+  `).join('');
+}
+
+function renderMarkers() {
+  if (!leafletMap) return;
+  // Remove existing markers
+  const toRemove = [];
+  leafletMap.eachLayer(layer => {
+    if (layer instanceof L.Marker) toRemove.push(layer);
+  });
+  toRemove.forEach(l => leafletMap.removeLayer(l));
+
+  const bounds = [];
+  getAllMapPlaces().forEach(p => {
+    const cat = CATEGORIES[p.cat] || CATEGORIES.hotel;
+    const icon = L.divIcon({
+      className: 'custom-pin',
+      html: `<div class="custom-pin-wrap" style="background:${cat.color}"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+      popupAnchor: [0, -8],
+    });
+    const m = L.marker([p.lat, p.lng], { icon }).addTo(leafletMap);
+    m.bindPopup(`
+      <div class="pop-name">${escapeHtml(p.name)}</div>
+      <div class="pop-cat">${cat.label}</div>
+      ${p.note ? `<div class="pop-note">${escapeHtml(p.note)}</div>` : ''}
+      ${hasMapTarget(p) ? `<a class="pop-link" href="${escapeAttr(getMapUrl(p))}" target="_blank" rel="noopener">↗ 구글맵에서 열기</a>` : ''}
+    `);
+    bounds.push([p.lat, p.lng]);
+  });
+
+  if (bounds.length && !initialBoundsSet) {
+    leafletMap.fitBounds(bounds, { padding: [40, 40] });
+    initialBoundsSet = true;
+  }
+}
+
+window.addEventListener('load', initMap);
+
+// ---------- D-Day ----------
+(function updateDday() {
+  const departure = new Date('2026-06-12T00:00:00');
+  const returnDate = new Date('2026-06-16T23:59:59');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const ddayEl = document.getElementById('dday');
+  const days = Math.ceil((departure - today) / (1000*60*60*24));
+  if (days > 0) ddayEl.textContent = 'D - ' + days;
+  else if (days === 0) ddayEl.textContent = 'D - DAY';
+  else if (today <= returnDate) ddayEl.textContent = 'DAY ' + (Math.abs(days)+1) + ' / 5';
+  else ddayEl.textContent = 'COMPLETE';
+})();
+
+// ---------- Tab Nav ----------
+const tabNavItems = document.querySelectorAll('.tab-nav-item');
+const tabs = document.querySelectorAll('.tab');
+
+function switchTab(name) {
+  tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  tabNavItems.forEach(m => m.classList.toggle('active', m.dataset.tab === name));
+  window.scrollTo(0, 0);
+  localStorage.setItem('bk-active-tab', name);
+  if (name === 'map' && leafletMap) {
+    setTimeout(() => leafletMap.invalidateSize(), 50);
+  }
+}
+tabNavItems.forEach(m => m.addEventListener('click', e => {
+  e.preventDefault();
+  switchTab(m.dataset.tab);
+}));
+const savedTab = localStorage.getItem('bk-active-tab');
+if (savedTab) switchTab(savedTab);
+
+// ---------- Plan Render ----------
+function escapeAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
+
+// 모바일 구글맵 앱에서 가게명까지 정확히 표시되는 URL 생성
+// 우선순위: place_id + 이름 (가장 정확) > place_id + 좌표 > 이름 > 좌표 > 원본 URL
+function getMapUrl(p) {
+  if (!p) return '';
+
+  const name = p.name ? encodeURIComponent(p.name) : '';
+  const hasCoord = p.lat != null && p.lng != null;
+
+  // 저장된 URL에서 place_id 추출
+  let placeId = null;
+  if (p.url) {
+    const m = p.url.match(/place_id[:=]([\w-]+)/);
+    if (m) placeId = m[1];
+  }
+
+  // 가장 정확: 이름 + place_id (가게명 라벨까지 정확)
+  if (placeId && name) {
+    return `https://www.google.com/maps/search/?api=1&query=${name}&query_place_id=${placeId}`;
+  }
+  // place_id + 좌표
+  if (placeId && hasCoord) {
+    return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}&query_place_id=${placeId}`;
+  }
+  // 이름만 (구글이 알아서 매칭)
+  if (name) {
+    return `https://www.google.com/maps/search/?api=1&query=${name}`;
+  }
+  // 좌표만 (이름 없을 때만 — 좌표 라벨로 뜸)
+  if (hasCoord) {
+    return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+  }
+  return p.url || '';
+}
+function hasMapTarget(p) {
+  return !!(p && ((p.lat != null && p.lng != null) || p.url));
+}
+
+let suppressNextClick = false;
+
+function renderPlan() {
+  const c = document.getElementById('planContainer');
+  if (!c) return;
+  c.innerHTML = PLAN.map((day, dayIdx) => `
+    <div class="day">
+      <div class="day-header">
+        <span class="day-num">${escapeHtml(day.label)}</span>
+        <span class="day-date">${escapeHtml(day.date)}</span>
+      </div>
+      <p class="day-theme">${escapeHtml(day.theme)}</p>
+      <div class="day-events" data-day-idx="${dayIdx}">
+        ${day.events.map(ev => renderEvent(ev)).join('')}
+      </div>
+      <button class="add-event-btn" type="button" data-day-idx="${dayIdx}">+ 이벤트 추가</button>
+    </div>
+  `).join('');
+
+  // 이벤트 클릭/스와이프/삭제 셋업
+  c.querySelectorAll('.event').forEach(el => {
+    const content = el.querySelector('.event-content');
+    content.addEventListener('click', e => {
+      if (suppressNextClick) { suppressNextClick = false; return; }
+      if (e.target.closest('a.map-link')) return;
+      // swipe 열려있으면 먼저 닫기
+      if (el.classList.contains('swipe-open')) {
+        el.classList.remove('swipe-open');
+        return;
+      }
+      // 다른 swipe-open 카드 닫기
+      document.querySelectorAll('.event.swipe-open').forEach(o => o.classList.remove('swipe-open'));
+      openEventModal(el.dataset.eventId);
+    });
+    el.querySelector('.event-swipe-action').addEventListener('click', e => {
+      e.stopPropagation();
+      const id = el.dataset.eventId;
+      if (!confirm('이 이벤트 삭제할까요?')) {
+        el.classList.remove('swipe-open');
+        return;
+      }
+      deleteEventById(id);
+    });
+    setupSwipe(el);
+  });
+
+  // 추가 버튼
+  c.querySelectorAll('.add-event-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEventModal(null, parseInt(btn.dataset.dayIdx, 10)));
+  });
+
+  // Sortable - 길게 눌러 드래그
+  if (typeof Sortable !== 'undefined') {
+    c.querySelectorAll('.day-events').forEach(container => {
+      const dayIdx = parseInt(container.dataset.dayIdx, 10);
+      Sortable.create(container, {
+        animation: 200,
+        delay: 280,
+        delayOnTouchOnly: true,
+        touchStartThreshold: 8,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        forceFallback: true,
+        fallbackTolerance: 5,
+        onStart: () => {
+          document.querySelectorAll('.event.swipe-open').forEach(o => o.classList.remove('swipe-open'));
+        },
+        onEnd: (evt) => {
+          if (evt.oldIndex === evt.newIndex) return;
+          const events = PLAN[dayIdx].events;
+          const [moved] = events.splice(evt.oldIndex, 1);
+          events.splice(evt.newIndex, 0, moved);
+          savePlan();
+          renderMarkers();
+          suppressNextClick = true;
+          setTimeout(() => suppressNextClick = false, 300);
+        }
+      });
+    });
+  }
+}
+
+function renderEvent(ev) {
+  const cat = ev.cat && CATEGORIES[ev.cat];
+  return `
+    <div class="event" data-event-id="${escapeAttr(ev.id)}">
+      <div class="event-swipe-action">삭제</div>
+      <div class="event-content">
+        <div class="event-time">${escapeHtml(ev.time)}</div>
+        <div>
+          <div class="event-name">${escapeHtml(ev.name)}${cat ? `<span class="event-cat-dot" style="background:${cat.color}"></span>` : ''}</div>
+          ${ev.note ? `<div class="event-note">${escapeHtml(ev.note)}</div>` : ''}
+          ${hasMapTarget(ev) ? `<a href="${escapeAttr(getMapUrl(ev))}" class="map-link" target="_blank" rel="noopener" style="margin-top:8px">↗ 지도</a>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function setupSwipe(eventEl) {
+  const content = eventEl.querySelector('.event-content');
+  const action = eventEl.querySelector('.event-swipe-action');
+  let startX = 0, startY = 0, curX = 0, dragging = false, dir = null;
+
+  function start(e) {
+    const t = e.touches ? e.touches[0] : e;
+    startX = t.clientX; startY = t.clientY; curX = 0;
+    dragging = true; dir = null;
+    content.style.transition = 'none';
+    action.style.transition = 'none';
+  }
+  function move(e) {
+    if (!dragging) return;
+    const t = e.touches ? e.touches[0] : e;
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    if (!dir) {
+      if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) dir = 'h';
+      else if (Math.abs(dy) > 6) dir = 'v';
+      else return;
+    }
+    if (dir === 'h') {
+      if (e.cancelable) e.preventDefault();
+      const base = eventEl.classList.contains('swipe-open') ? -92 : 0;
+      curX = Math.min(0, Math.max(-110, base + dx));
+      content.style.transform = `translateX(${curX}px)`;
+      action.style.transform = `translateX(${Math.max(0, 92 + curX)}px)`;
+    }
+  }
+  function end() {
+    if (!dragging) return;
+    dragging = false;
+    content.style.transition = '';
+    action.style.transition = '';
+    if (dir === 'h') {
+      content.style.transform = '';
+      action.style.transform = '';
+      if (curX < -40) eventEl.classList.add('swipe-open');
+      else eventEl.classList.remove('swipe-open');
+      if (Math.abs(curX) > 5) {
+        suppressNextClick = true;
+        setTimeout(() => suppressNextClick = false, 300);
+      }
+    }
+  }
+
+  eventEl.addEventListener('touchstart', start, { passive: true });
+  eventEl.addEventListener('touchmove', move, { passive: false });
+  eventEl.addEventListener('touchend', end);
+  eventEl.addEventListener('touchcancel', end);
+}
+
+function deleteEventById(eventId) {
+  const found = findEvent(eventId);
+  if (!found) return;
+  PLAN[found.dayIdx].events.splice(found.evIdx, 1);
+  savePlan();
+  renderPlan();
+  renderMarkers();
+}
+
+// 카드 밖 클릭 시 swipe 닫기
+document.addEventListener('click', e => {
+  if (e.target.closest('.event')) return;
+  document.querySelectorAll('.event.swipe-open').forEach(o => o.classList.remove('swipe-open'));
+});
+
+// ---------- Event Modal ----------
+let modalState = { mode: null, eventId: null, dayIdx: null };
+
+const eventModal = document.getElementById('eventModal');
+const m_time = document.getElementById('m_time');
+const m_name = document.getElementById('m_name');
+const m_note = document.getElementById('m_note');
+const m_url = document.getElementById('m_url');
+const m_cat = document.getElementById('m_cat');
+const modalTitle = document.getElementById('modalTitle');
+const modalDeleteBtn = document.getElementById('modalDelete');
+
+function findEvent(eventId) {
+  for (let i = 0; i < PLAN.length; i++) {
+    const idx = PLAN[i].events.findIndex(e => e.id === eventId);
+    if (idx >= 0) return { dayIdx: i, evIdx: idx, event: PLAN[i].events[idx] };
+  }
+  return null;
+}
+
+function openEventModal(eventId, dayIdx) {
+  if (eventId) {
+    const found = findEvent(eventId);
+    if (!found) return;
+    const ev = found.event;
+    modalState = { mode: 'edit', eventId, dayIdx: found.dayIdx };
+    modalTitle.textContent = '이벤트 편집';
+    m_time.value = ev.time || '';
+    m_name.value = ev.name || '';
+    m_note.value = ev.note || '';
+    m_url.value = ev.url || '';
+    m_cat.value = ev.cat || '';
+    modalDeleteBtn.style.display = '';
+  } else {
+    modalState = { mode: 'add', eventId: null, dayIdx };
+    modalTitle.textContent = '새 이벤트';
+    m_time.value = '';
+    m_name.value = '';
+    m_note.value = '';
+    m_url.value = '';
+    m_cat.value = '';
+    modalDeleteBtn.style.display = 'none';
+  }
+  eventModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => m_name.focus(), 80);
+}
+
+function closeEventModal() {
+  eventModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function saveEventFromModal() {
+  const name = m_name.value.trim();
+  if (!name) { alert('이름을 입력해주세요'); return; }
+
+  const url = m_url.value.trim();
+  let lat = null, lng = null;
+  if (url) {
+    const m = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+    if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
+  }
+
+  const data = {
+    time: m_time.value.trim(),
+    name,
+    note: m_note.value.trim(),
+    url,
+    cat: m_cat.value,
+    lat, lng,
+  };
+
+  if (modalState.mode === 'edit') {
+    const found = findEvent(modalState.eventId);
+    if (!found) return;
+    const existing = PLAN[found.dayIdx].events[found.evIdx];
+    // URL은 그대로인데 좌표 추출 실패한 경우 기존 좌표 유지
+    if (data.lat == null && existing.url === data.url) {
+      data.lat = existing.lat;
+      data.lng = existing.lng;
+    }
+    Object.assign(existing, data);
+  } else {
+    const newEv = { id: 'e' + Date.now(), ...data };
+    PLAN[modalState.dayIdx].events.push(newEv);
+  }
+
+  savePlan();
+  renderPlan();
+  renderMarkers();
+  closeEventModal();
+}
+
+function deleteEventFromModal() {
+  if (modalState.mode !== 'edit') return;
+  if (!confirm('이 이벤트 삭제할까요?')) return;
+  const found = findEvent(modalState.eventId);
+  if (!found) return;
+  PLAN[found.dayIdx].events.splice(found.evIdx, 1);
+  savePlan();
+  renderPlan();
+  renderMarkers();
+  closeEventModal();
+}
+
+document.getElementById('modalClose').addEventListener('click', closeEventModal);
+document.getElementById('modalCancel').addEventListener('click', closeEventModal);
+document.getElementById('modalSave').addEventListener('click', saveEventFromModal);
+modalDeleteBtn.addEventListener('click', deleteEventFromModal);
+eventModal.addEventListener('click', e => { if (e.target === eventModal) closeEventModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && eventModal.classList.contains('open')) closeEventModal();
+});
+
+renderPlan();
+
+// ---------- Checklist (with add/delete) ----------
+const CHECK_KEY = 'bk-checklist-v2';
+const defaultChecklist = [
+  { id: 'grab', text: 'Grab 앱 설치 + 카드 등록', checked: false },
+  { id: 'esim', text: 'eSIM 또는 로밍 준비', checked: false },
+  { id: 'cur', text: 'USD 환전 (방콕 도착 후 슈퍼리치에서 밧으로)', checked: false },
+  { id: 'umb', text: '작은 우산 (6월 우기 시작)', checked: false },
+  { id: 'book', text: '읽을 책 1~2권', checked: false },
+  { id: 'maggie', text: "Maggie Choo's 토요일 예약 (인스타 DM)", checked: false },
+  { id: 'adap', text: '멀티 어댑터 (태국 A/C/F 타입)', checked: false },
+  { id: 'sun', text: '자외선 차단제 · 가벼운 옷', checked: false },
+  { id: 'doc', text: '호텔 바우처 · 항공권 캡처', checked: false },
+];
+function loadChecklist() {
+  try {
+    return JSON.parse(localStorage.getItem(CHECK_KEY)) || defaultChecklist;
+  } catch (e) { return defaultChecklist; }
+}
+function saveChecklist(items) {
+  localStorage.setItem(CHECK_KEY, JSON.stringify(items));
+}
+function renderChecklist() {
+  const items = loadChecklist();
+  const c = document.getElementById('checklistContainer');
+  c.innerHTML = items.map(item => `
+    <div class="checklist-item ${item.checked ? 'checked' : ''}" data-id="${item.id}">
+      <div class="check-area">
+        <div class="checkbox"></div>
+        <div class="checklist-text">${escapeHtml(item.text)}</div>
+      </div>
+      <button class="item-delete" title="삭제">×</button>
+    </div>
+  `).join('');
+  c.querySelectorAll('.checklist-item').forEach(el => {
+    const id = el.dataset.id;
+    el.querySelector('.check-area').addEventListener('click', () => {
+      const items = loadChecklist();
+      const it = items.find(x => x.id === id);
+      if (it) { it.checked = !it.checked; saveChecklist(items); renderChecklist(); }
+    });
+    el.querySelector('.item-delete').addEventListener('click', () => {
+      if (!confirm('삭제할까요?')) return;
+      saveChecklist(loadChecklist().filter(x => x.id !== id));
+      renderChecklist();
+    });
+  });
+}
+document.getElementById('addCheckBtn').addEventListener('click', addCheck);
+document.getElementById('newCheckInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addCheck();
+});
+function addCheck() {
+  const input = document.getElementById('newCheckInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const items = loadChecklist();
+  items.push({ id: 'c' + Date.now(), text, checked: false });
+  saveChecklist(items);
+  input.value = '';
+  renderChecklist();
+}
+renderChecklist();
+
+// ---------- Budget Tracker ----------
+const BUDGET_KEY = 'bk-budget-v1';
+const PEOPLE_KEY = 'bk-people-v1';
+
+const paymentLabels = {
+  corp_card: '법인카드',
+  personal_card: '개인카드',
+  cash: '개인현금'
+};
+
+function loadBudget() {
+  try { return JSON.parse(localStorage.getItem(BUDGET_KEY)) || []; }
+  catch (e) { return []; }
+}
+function saveBudget(items) { localStorage.setItem(BUDGET_KEY, JSON.stringify(items)); }
+function loadPeople() { return parseInt(localStorage.getItem(PEOPLE_KEY) || '2', 10); }
+function savePeople(n) { localStorage.setItem(PEOPLE_KEY, String(n)); }
+
+function fmtMoney(n) {
+  return '₩ ' + (n || 0).toLocaleString('ko-KR');
+}
+
+function renderBudget() {
+  const items = loadBudget();
+  const list = document.getElementById('budgetList');
+  const summary = document.getElementById('budgetSummary');
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="budget-empty">아직 등록된 비용이 없어요</div>';
+  } else {
+    list.innerHTML = items.map(it => `
+      <div class="budget-item" data-id="${it.id}">
+        <div class="bi-info">
+          <div class="bi-name">${escapeHtml(it.name)}</div>
+          <div class="bi-meta">
+            <span class="bi-tag ${it.payment === 'corp_card' ? 'corp' : ''}">${paymentLabels[it.payment]}</span>
+            ${it.includeSplit ? '<span class="bi-tag split-on">인당 포함</span>' : ''}
+          </div>
+        </div>
+        <div class="bi-amount">${fmtMoney(it.amount)}</div>
+        <button class="item-delete" title="삭제">×</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('.item-delete').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const id = e.target.closest('.budget-item').dataset.id;
+        if (!confirm('이 비용 삭제할까요?')) return;
+        saveBudget(loadBudget().filter(x => x.id !== id));
+        renderBudget();
+      });
+    });
+  }
+
+  // Summary
+  const total = items.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+  const byPayment = { corp_card: 0, personal_card: 0, cash: 0 };
+  let splitTotal = 0;
+  items.forEach(x => {
+    const a = Number(x.amount) || 0;
+    byPayment[x.payment] = (byPayment[x.payment] || 0) + a;
+    if (x.includeSplit) splitTotal += a;
+  });
+  const people = loadPeople();
+  const perPerson = people > 0 ? splitTotal / people : 0;
+
+  summary.innerHTML = `
+    <div class="summary-total">
+      <span class="summary-total-label">total</span>
+      <span class="summary-total-value">${fmtMoney(total)}</span>
+    </div>
+    <div class="summary-row"><span class="summary-row-label">법인카드</span><span class="summary-row-value">${fmtMoney(byPayment.corp_card)}</span></div>
+    <div class="summary-row"><span class="summary-row-label">개인카드</span><span class="summary-row-value">${fmtMoney(byPayment.personal_card)}</span></div>
+    <div class="summary-row"><span class="summary-row-label">개인현금</span><span class="summary-row-value">${fmtMoney(byPayment.cash)}</span></div>
+    <div class="summary-per-person">
+      <div class="spp-label">per person</div>
+      <div class="spp-value">${fmtMoney(Math.round(perPerson))}</div>
+      <div class="spp-sub">${people}명 기준 · 인당 계산 포함 항목만 (${fmtMoney(splitTotal)})</div>
+    </div>
+  `;
+}
+
+// Split toggle
+const splitToggle = document.getElementById('splitToggle');
+splitToggle.addEventListener('click', () => splitToggle.classList.toggle('on'));
+
+// People count
+const peopleInput = document.getElementById('peopleCount');
+peopleInput.value = loadPeople();
+peopleInput.addEventListener('change', () => {
+  const n = Math.max(1, parseInt(peopleInput.value, 10) || 1);
+  peopleInput.value = n;
+  savePeople(n);
+  renderBudget();
+});
+
+// Add expense
+document.getElementById('addBudgetBtn').addEventListener('click', () => {
+  const name = document.getElementById('bName').value.trim();
+  const amount = parseFloat(document.getElementById('bAmount').value);
+  const payment = document.getElementById('bPayment').value;
+  const includeSplit = splitToggle.classList.contains('on');
+
+  if (!name) { alert('비용 이름을 입력해주세요'); return; }
+  if (!amount || amount <= 0) { alert('금액을 입력해주세요'); return; }
+
+  const items = loadBudget();
+  items.push({
+    id: 'b' + Date.now(),
+    name, amount, payment, includeSplit,
+    createdAt: new Date().toISOString()
+  });
+  saveBudget(items);
+
+  document.getElementById('bName').value = '';
+  document.getElementById('bAmount').value = '';
+  renderBudget();
+});
+
+renderBudget();
+
+// ---------- Places Render (Notes tab) ----------
+function renderPlaces() {
+  const c = document.getElementById('placesContainer');
+  if (!c) return;
+
+  // Planned: PLAN의 url 있는 이벤트들
+  const planned = [];
+  PLAN.forEach(day => {
+    day.events.forEach(ev => {
+      if (ev.url) planned.push({ ...ev, dayLabel: day.label });
+    });
+  });
+
+  c.innerHTML = `
+    <div class="dir-group">
+      <div class="dir-group-title">in plan <span class="dir-group-count">${planned.length}</span></div>
+      ${planned.length
+        ? planned.map(p => renderPlannedItem(p)).join('')
+        : '<div class="empty-notice">아직 URL이 추가된 장소가 없어요</div>'}
+    </div>
+    <div class="dir-group">
+      <div class="dir-group-title">other places <span class="dir-group-count">${PLACES.length}</span></div>
+      ${PLACES.map(p => renderUnplannedItem(p)).join('')}
+      <button class="add-place-btn" type="button" id="addPlaceBtn">+ 장소 추가</button>
+    </div>
+  `;
+
+  c.querySelectorAll('.unplanned-item').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('a')) return;
+      openPlaceModal(el.dataset.placeId);
+    });
+  });
+  const addBtn = document.getElementById('addPlaceBtn');
+  if (addBtn) addBtn.addEventListener('click', () => openPlaceModal(null));
+}
+
+function renderPlannedItem(p) {
+  const cat = p.cat && CATEGORIES[p.cat];
+  return `
+    <a href="${escapeAttr(getMapUrl(p))}" target="_blank" rel="noopener" class="dir-item">
+      <div class="dir-item-info">
+        <div class="dir-item-name">${escapeHtml(p.name)}${cat ? `<span class="event-cat-dot" style="background:${cat.color}"></span>` : ''}</div>
+        <div class="dir-item-note">Day ${escapeHtml(p.dayLabel)}${p.time ? ' · ' + escapeHtml(p.time) : ''}</div>
+      </div>
+      <span class="dir-item-arrow">→</span>
+    </a>
+  `;
+}
+
+function renderUnplannedItem(p) {
+  const cat = p.cat && CATEGORIES[p.cat];
+  return `
+    <div class="dir-item unplanned-item" data-place-id="${escapeAttr(p.id)}">
+      <div class="dir-item-info">
+        <div class="dir-item-name">${escapeHtml(p.name)}${cat ? `<span class="event-cat-dot" style="background:${cat.color}"></span>` : ''}</div>
+        ${p.note ? `<div class="dir-item-note">${escapeHtml(p.note)}</div>` : ''}
+      </div>
+      ${hasMapTarget(p)
+        ? `<a href="${escapeAttr(getMapUrl(p))}" target="_blank" rel="noopener" class="dir-item-arrow" onclick="event.stopPropagation()">→</a>`
+        : '<span class="dir-item-arrow">···</span>'}
+    </div>
+  `;
+}
+
+// ---------- Place Modal ----------
+let placeModalState = { mode: null, placeId: null };
+const placeModal = document.getElementById('placeModal');
+const p_name = document.getElementById('p_name');
+const p_note = document.getElementById('p_note');
+const p_url = document.getElementById('p_url');
+const p_cat = document.getElementById('p_cat');
+const placeModalTitle = document.getElementById('placeModalTitle');
+const placeModalDeleteBtn = document.getElementById('placeModalDelete');
+
+function openPlaceModal(placeId) {
+  if (placeId) {
+    const place = PLACES.find(p => p.id === placeId);
+    if (!place) return;
+    placeModalState = { mode: 'edit', placeId };
+    placeModalTitle.textContent = '장소 편집';
+    p_name.value = place.name || '';
+    p_note.value = place.note || '';
+    p_url.value = place.url || '';
+    p_cat.value = place.cat || '';
+    placeModalDeleteBtn.style.display = '';
+  } else {
+    placeModalState = { mode: 'add', placeId: null };
+    placeModalTitle.textContent = '새 장소';
+    p_name.value = '';
+    p_note.value = '';
+    p_url.value = '';
+    p_cat.value = '';
+    placeModalDeleteBtn.style.display = 'none';
+  }
+  placeModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => p_name.focus(), 80);
+}
+
+function closePlaceModal() {
+  placeModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function savePlaceFromModal() {
+  const name = p_name.value.trim();
+  if (!name) { alert('이름을 입력해주세요'); return; }
+
+  const url = p_url.value.trim();
+  let lat = null, lng = null;
+  if (url) {
+    const m = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+    if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
+  }
+
+  const data = {
+    name,
+    note: p_note.value.trim(),
+    url,
+    cat: p_cat.value,
+    lat, lng,
+  };
+
+  if (placeModalState.mode === 'edit') {
+    const existing = PLACES.find(p => p.id === placeModalState.placeId);
+    if (!existing) return;
+    if (data.lat == null && existing.url === data.url) {
+      data.lat = existing.lat;
+      data.lng = existing.lng;
+    }
+    Object.assign(existing, data);
+  } else {
+    PLACES.push({ id: 'p' + Date.now(), ...data });
+  }
+
+  savePlaces();
+  renderPlaces();
+  renderMarkers();
+  closePlaceModal();
+}
+
+function deletePlaceFromModal() {
+  if (placeModalState.mode !== 'edit') return;
+  if (!confirm('이 장소 삭제할까요?')) return;
+  const idx = PLACES.findIndex(p => p.id === placeModalState.placeId);
+  if (idx < 0) return;
+  PLACES.splice(idx, 1);
+  savePlaces();
+  renderPlaces();
+  renderMarkers();
+  closePlaceModal();
+}
+
+document.getElementById('placeModalClose').addEventListener('click', closePlaceModal);
+document.getElementById('placeModalCancel').addEventListener('click', closePlaceModal);
+document.getElementById('placeModalSave').addEventListener('click', savePlaceFromModal);
+placeModalDeleteBtn.addEventListener('click', deletePlaceFromModal);
+placeModal.addEventListener('click', e => { if (e.target === placeModal) closePlaceModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && placeModal.classList.contains('open')) closePlaceModal();
+});
+
+renderPlaces();
+
+// ---------- Utility ----------
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, s => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[s]));
+}
+</script>
+</body>
+</html>
