@@ -1296,7 +1296,7 @@ function renderMarkers() {
       <div class="pop-name">${escapeHtml(p.name)}</div>
       <div class="pop-cat">${cat.label}</div>
       ${p.note ? `<div class="pop-note">${escapeHtml(p.note)}</div>` : ''}
-      ${p.url ? `<a class="pop-link" href="${p.url}" target="_blank" rel="noopener">↗ 구글맵에서 열기</a>` : ''}
+      ${hasMapTarget(p) ? `<a class="pop-link" href="${escapeAttr(getMapUrl(p))}" target="_blank" rel="noopener">↗ 구글맵에서 열기</a>` : ''}
     `);
     bounds.push([p.lat, p.lng]);
   });
@@ -1345,6 +1345,43 @@ if (savedTab) switchTab(savedTab);
 
 // ---------- Plan Render ----------
 function escapeAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
+
+// 모바일 구글맵 앱에서 가게명까지 정확히 표시되는 URL 생성
+// 우선순위: place_id + 이름 (가장 정확) > place_id + 좌표 > 이름 > 좌표 > 원본 URL
+function getMapUrl(p) {
+  if (!p) return '';
+
+  const name = p.name ? encodeURIComponent(p.name) : '';
+  const hasCoord = p.lat != null && p.lng != null;
+
+  // 저장된 URL에서 place_id 추출
+  let placeId = null;
+  if (p.url) {
+    const m = p.url.match(/place_id[:=]([\w-]+)/);
+    if (m) placeId = m[1];
+  }
+
+  // 가장 정확: 이름 + place_id (가게명 라벨까지 정확)
+  if (placeId && name) {
+    return `https://www.google.com/maps/search/?api=1&query=${name}&query_place_id=${placeId}`;
+  }
+  // place_id + 좌표
+  if (placeId && hasCoord) {
+    return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}&query_place_id=${placeId}`;
+  }
+  // 이름만 (구글이 알아서 매칭)
+  if (name) {
+    return `https://www.google.com/maps/search/?api=1&query=${name}`;
+  }
+  // 좌표만 (이름 없을 때만 — 좌표 라벨로 뜸)
+  if (hasCoord) {
+    return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+  }
+  return p.url || '';
+}
+function hasMapTarget(p) {
+  return !!(p && ((p.lat != null && p.lng != null) || p.url));
+}
 
 let suppressNextClick = false;
 
@@ -1439,7 +1476,7 @@ function renderEvent(ev) {
         <div>
           <div class="event-name">${escapeHtml(ev.name)}${cat ? `<span class="event-cat-dot" style="background:${cat.color}"></span>` : ''}</div>
           ${ev.note ? `<div class="event-note">${escapeHtml(ev.note)}</div>` : ''}
-          ${ev.url ? `<a href="${escapeAttr(ev.url)}" class="map-link" target="_blank" rel="noopener" style="margin-top:8px">↗ 지도</a>` : ''}
+          ${hasMapTarget(ev) ? `<a href="${escapeAttr(getMapUrl(ev))}" class="map-link" target="_blank" rel="noopener" style="margin-top:8px">↗ 지도</a>` : ''}
         </div>
       </div>
     </div>
@@ -1854,7 +1891,7 @@ function renderPlaces() {
 function renderPlannedItem(p) {
   const cat = p.cat && CATEGORIES[p.cat];
   return `
-    <a href="${escapeAttr(p.url)}" target="_blank" rel="noopener" class="dir-item">
+    <a href="${escapeAttr(getMapUrl(p))}" target="_blank" rel="noopener" class="dir-item">
       <div class="dir-item-info">
         <div class="dir-item-name">${escapeHtml(p.name)}${cat ? `<span class="event-cat-dot" style="background:${cat.color}"></span>` : ''}</div>
         <div class="dir-item-note">Day ${escapeHtml(p.dayLabel)}${p.time ? ' · ' + escapeHtml(p.time) : ''}</div>
@@ -1872,8 +1909,8 @@ function renderUnplannedItem(p) {
         <div class="dir-item-name">${escapeHtml(p.name)}${cat ? `<span class="event-cat-dot" style="background:${cat.color}"></span>` : ''}</div>
         ${p.note ? `<div class="dir-item-note">${escapeHtml(p.note)}</div>` : ''}
       </div>
-      ${p.url
-        ? `<a href="${escapeAttr(p.url)}" target="_blank" rel="noopener" class="dir-item-arrow" onclick="event.stopPropagation()">→</a>`
+      ${hasMapTarget(p)
+        ? `<a href="${escapeAttr(getMapUrl(p))}" target="_blank" rel="noopener" class="dir-item-arrow" onclick="event.stopPropagation()">→</a>`
         : '<span class="dir-item-arrow">···</span>'}
     </div>
   `;
