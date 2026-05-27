@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#fafaf7">
+<meta name="apple-mobile-web-app-title" content="Bangkok">
+<meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16140f" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href='data:application/manifest+json,{"name":"Bangkok 06.12—06.16","short_name":"Bangkok","start_url":"./","display":"standalone","background_color":"%23fafaf7","theme_color":"%23fafaf7","orientation":"portrait","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><rect width=%22512%22 height=%22512%22 fill=%22%23fafaf7%22/><text x=%22256%22 y=%22340%22 font-family=%22serif%22 font-size=%22300%22 text-anchor=%22middle%22 fill=%22%231a1a1a%22 font-weight=%22300%22 font-style=%22italic%22>B</text></svg>","sizes":"any","type":"image/svg+xml","purpose":"any"}]}'>
+<link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="80" fill="%23fafaf7"/><text x="256" y="340" font-family="serif" font-size="300" text-anchor="middle" fill="%231a1a1a" font-weight="300" font-style="italic">B</text></svg>'>
 <title>Bangkok · 6.12 — 6.16</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,6 +30,39 @@
   --danger: #b04a3a;
   --topnav-h: 56px;
 }
+
+[data-theme="dark"] {
+  --bg: #16140f;
+  --surface: #1f1d18;
+  --text: #f0ece2;
+  --muted: #8e8b80;
+  --soft: #5a5852;
+  --line: #2a2823;
+  --line-strong: #3a3832;
+  --rest-bg: #1c1a15;
+  --danger: #c4604f;
+}
+
+[data-theme="dark"] img.day-img,
+[data-theme="dark"] .leaflet-tile-pane { filter: brightness(0.85) contrast(0.95); }
+
+.theme-toggle {
+  position: fixed;
+  top: 12px; right: 14px;
+  z-index: 100;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--text); }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
@@ -552,6 +589,190 @@ body {
 }
 #leafletMap { width: 100%; height: 100%; background: var(--bg); }
 
+/* ============ Weather Widget ============ */
+.weather-widget {
+  margin: 24px 0 4px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+}
+.weather-loading {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--soft);
+  text-align: center;
+}
+.weather-current {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.weather-temp {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+.weather-icon { font-size: 26px; }
+.weather-desc {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+}
+.weather-forecast {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.weather-day {
+  text-align: center;
+  padding: 6px 2px;
+}
+.weather-day-label {
+  font-size: 10px;
+  color: var(--soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: 'Fraunces', serif;
+}
+.weather-day-icon { font-size: 18px; margin: 4px 0; }
+.weather-day-temp {
+  font-family: 'Fraunces', serif;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.weather-day-temp .high { color: var(--text); }
+.weather-day-temp .low { color: var(--muted); margin-left: 2px; }
+.weather-day.today .weather-day-label { color: var(--text); }
+
+/* ============ Locate Button ============ */
+.map-frame { position: relative; }
+.map-locate-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 401;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  transition: all 0.15s;
+}
+.map-locate-btn:hover { border-color: var(--text); }
+.map-locate-btn.loading { animation: pulse 1.2s ease-in-out infinite; }
+.map-hotel-btn { bottom: 56px; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* User location marker */
+.user-location-marker {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 3px solid white;
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.25);
+}
+
+/* ============ Rate Fetch ============ */
+.rate-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rate-input-wrap input { flex: 1; }
+.rate-fetch-btn {
+  width: 32px; height: 32px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 14px;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+.rate-fetch-btn:hover { border-color: var(--text); color: var(--text); }
+.rate-fetch-btn.loading { animation: spin 0.9s linear infinite; }
+@keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+.rate-meta {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--soft);
+  margin-top: -8px;
+  margin-bottom: 8px;
+  min-height: 14px;
+}
+
+/* ============ Phrase List ============ */
+.phrase-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.phrase-item {
+  background: var(--bg);
+  padding: 14px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.phrase-item:hover { background: var(--rest-bg); }
+.phrase-ko {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+.phrase-th {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.phrase-roman {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--soft);
+}
+.phrase-play {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.phrase-play:hover { border-color: var(--text); background: var(--surface); }
+.phrase-play.speaking {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
 /* Custom marker */
 .custom-pin { background: none !important; border: none !important; }
 .custom-pin-wrap {
@@ -704,7 +925,22 @@ body {
   border: solid var(--bg); border-width: 0 1.5px 1.5px 0;
   transform: rotate(45deg) translate(-1px, -1px);
 }
-.checklist-text { font-size: 15px; flex: 1; transition: color 0.15s; line-height: 1.5; }
+.checklist-text { font-size: 15px; flex: 1; transition: color 0.15s; line-height: 1.5; cursor: pointer; }
+.checkbox { cursor: pointer; }
+.checklist-edit-input {
+  font-family: inherit;
+  font-size: 15px;
+  flex: 1;
+  border: none;
+  border-bottom: 1px solid var(--text);
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  padding: 0 0 2px 0;
+  line-height: 1.5;
+  min-width: 0;
+  width: 100%;
+}
 .checklist-item.checked .checklist-text {
   color: var(--soft);
   text-decoration: line-through;
@@ -754,6 +990,46 @@ body {
   margin-bottom: 4px;
 }
 .budget-form-row { display: grid; grid-template-columns: 1fr 110px; gap: 10px; }
+
+.amount-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+.amount-input-wrap input[type="number"] {
+  flex: 1;
+  min-width: 0;
+}
+.currency-toggle {
+  display: flex;
+  border: 1px solid var(--line-strong);
+  border-left: none;
+  background: var(--bg);
+}
+.cur-btn {
+  background: none;
+  border: none;
+  padding: 0 12px;
+  font-size: 15px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'Fraunces', serif;
+  min-width: 36px;
+  transition: all 0.15s;
+}
+.cur-btn.active { background: var(--text); color: var(--bg); }
+.cur-btn:first-child { border-right: 1px solid var(--line-strong); }
+.cur-btn.active:first-child { border-right-color: var(--text); }
+
+.amount-preview {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  min-height: 16px;
+  padding-left: 2px;
+  margin-top: -4px;
+}
 .budget-form input[type="text"],
 .budget-form input[type="number"],
 .budget-form select {
@@ -830,6 +1106,14 @@ body {
   font-size: 16px;
   font-variant-numeric: tabular-nums;
   font-weight: 400;
+  text-align: right;
+}
+.bi-baht {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 2px;
 }
 
 .budget-summary {
@@ -897,7 +1181,8 @@ body {
 .dir-item-note { font-size: 12px; color: var(--muted); margin-top: 3px; }
 .dir-item-arrow { font-family: 'Fraunces', serif; color: var(--soft); font-size: 22px; font-weight: 300; }
 
-.tip { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.tip { padding: 18px 0; border-bottom: 1px solid var(--line); cursor: pointer; transition: opacity 0.15s; }
+.tip:hover { opacity: 0.7; }
 .tip:last-child { border-bottom: none; }
 .tip-label { font-family: 'Fraunces', serif; font-style: italic; font-size: 13px; color: var(--muted); margin-bottom: 5px; }
 .tip-body { font-size: 14px; line-height: 1.65; }
@@ -925,6 +1210,7 @@ body {
 </style>
 </head>
 <body>
+<button class="theme-toggle" id="themeToggle" aria-label="테마 변경" title="테마 변경">🌙</button>
 
 <!-- ============ Top Nav ============ -->
 <header class="topnav">
@@ -948,6 +1234,10 @@ body {
     <div class="hero-dday-badge" id="dday">D - ?</div>
   </div>
 
+  <div class="weather-widget" id="weatherWidget">
+    <div class="weather-loading">날씨 가져오는 중…</div>
+  </div>
+
   <div class="section-label">stay</div>
   <div class="stay-card">
     <div class="stay-name">The Sukhothai Bangkok</div>
@@ -959,6 +1249,8 @@ body {
     <div class="section-label">overview</div>
     <div class="map-frame">
       <div id="leafletMap"></div>
+      <button class="map-locate-btn map-hotel-btn" id="hotelBtn" title="호텔 위치">🏨</button>
+      <button class="map-locate-btn" id="locateBtn" title="내 위치">📍</button>
       <div class="map-legend" id="mapLegend"></div>
     </div>
   </div>
@@ -995,16 +1287,32 @@ body {
     <input type="number" id="peopleCount" value="2" min="1" max="20">
   </div>
 
+  <div class="budget-config">
+    <span class="budget-config-label">환율 (1 바트 = ? 원)</span>
+    <div class="rate-input-wrap">
+      <input type="number" id="thbRate" value="40" min="0" step="0.1">
+      <button type="button" class="rate-fetch-btn" id="rateFetchBtn" title="실시간 환율 가져오기">↻</button>
+    </div>
+  </div>
+  <div class="rate-meta" id="rateMeta"></div>
+
   <div class="budget-form">
     <input type="text" id="bName" placeholder="비용 이름 (예: 수코타이 1박)">
     <div class="budget-form-row">
-      <input type="number" id="bAmount" placeholder="금액 (원)" inputmode="numeric">
+      <div class="amount-input-wrap">
+        <input type="number" id="bAmount" placeholder="금액" inputmode="decimal" step="0.01">
+        <div class="currency-toggle" id="currencyToggle">
+          <button type="button" class="cur-btn active" data-cur="KRW">₩</button>
+          <button type="button" class="cur-btn" data-cur="THB">฿</button>
+        </div>
+      </div>
       <select id="bPayment">
         <option value="corp_card">법인카드</option>
         <option value="personal_card">개인카드</option>
         <option value="cash">개인현금</option>
       </select>
     </div>
+    <div class="amount-preview" id="amountPreview"></div>
     <label class="split-toggle on" id="splitToggle">
       <span class="mini-check"></span>
       <span>인당 비용 계산에 포함</span>
@@ -1025,13 +1333,16 @@ body {
   <div id="placesContainer"></div>
 
   <div style="margin-top: 64px">
+    <div class="section-label">phrases</div>
+    <h2 class="section-title">thai, just enough</h2>
+    <div class="phrase-list" id="phraseList"></div>
+  </div>
+
+  <div style="margin-top: 64px">
     <div class="section-label">notes</div>
     <h2 class="section-title">small things</h2>
-    <div class="tip"><div class="tip-label">on heat —</div><div class="tip-body">12 ~ 16시는 가장 더운 시간. 무조건 호텔. 외출은 7~10시, 17시 이후.</div></div>
-    <div class="tip"><div class="tip-label">on rain —</div><div class="tip-body">6월은 우기. 스콜은 보통 1시간 안에 끝남. 작은 우산이면 충분.</div></div>
-    <div class="tip"><div class="tip-label">on transport —</div><div class="tip-body">러시아워는 평일 7~9시, 16~19시. 이 시간엔 BTS · MRT가 그랩보다 빠름.</div></div>
-    <div class="tip"><div class="tip-label">on tipping —</div><div class="tip-body">마사지는 50~100밧 정도. 식당은 봉사료 포함이라 별도 팁 안 줘도 OK.</div></div>
-    <div class="tip"><div class="tip-label">on dress code —</div><div class="tip-body">사원 가는 일정은 없지만, 혹시 들르면 어깨 · 무릎 가리기. 루프탑 바는 캐주얼 OK.</div></div>
+    <div id="tipsContainer"></div>
+    <button class="add-place-btn" type="button" id="addTipBtn" style="margin-top:12px">+ 노트 추가</button>
   </div>
 
   <div class="footer-mark">travel well, come back rested.</div>
@@ -1123,7 +1434,59 @@ body {
   </div>
 </div>
 
+<!-- ============ Tip Modal ============ -->
+<div class="modal-backdrop" id="tipModal" role="dialog" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="tipModalTitle">노트 편집</h3>
+      <button class="modal-close" id="tipModalClose" aria-label="close">×</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="t_label">라벨</label>
+      <input class="modal-input" type="text" id="t_label" placeholder="예: on heat —">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="t_body">내용</label>
+      <textarea class="modal-textarea" id="t_body" rows="3"></textarea>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-save" id="tipModalSave" type="button">저장</button>
+      <button class="modal-cancel" id="tipModalCancel" type="button">취소</button>
+      <button class="modal-delete" id="tipModalDelete" type="button">삭제</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ---------- Service Worker (offline + install) ----------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
+
+// ---------- Theme Toggle ----------
+(function() {
+  const THEME_KEY = 'bk-theme';
+  const root = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+  const saved = localStorage.getItem(THEME_KEY);
+  const initial = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  if (initial === 'dark') root.setAttribute('data-theme', 'dark');
+  if (btn) {
+    btn.textContent = initial === 'dark' ? '☀️' : '🌙';
+    btn.addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      if (next === 'dark') root.setAttribute('data-theme', 'dark');
+      else root.removeAttribute('data-theme');
+      btn.textContent = next === 'dark' ? '☀️' : '🌙';
+      localStorage.setItem(THEME_KEY, next);
+    });
+  }
+})();
+
 // ---------- Places Data ----------
 const CATEGORIES = {
   hotel:   { label: '호텔',      color: '#1a1a1a' },
@@ -1270,6 +1633,59 @@ function initMap() {
       <span>${v.label}</span>
     </div>
   `).join('');
+
+  setupLocateButton();
+  setupHotelButton();
+}
+
+function setupHotelButton() {
+  const btn = document.getElementById('hotelBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const hotel = PLACES.find(p => p.id === 'sukhothai') || PLACES.find(p => p.cat === 'hotel');
+    const lat = hotel ? hotel.lat : 13.7229783;
+    const lng = hotel ? hotel.lng : 100.5408690;
+    leafletMap.setView([lat, lng], 16);
+  });
+}
+
+// ---------- Locate Button (current location) ----------
+let userLocMarker = null;
+function setupLocateButton() {
+  const btn = document.getElementById('locateBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      alert('이 브라우저는 위치 정보를 지원하지 않아요');
+      return;
+    }
+    btn.classList.add('loading');
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        btn.classList.remove('loading');
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if (userLocMarker) leafletMap.removeLayer(userLocMarker);
+        const icon = L.divIcon({
+          className: 'user-location-pin',
+          html: '<div class="user-location-marker"></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+        });
+        userLocMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).addTo(leafletMap);
+        userLocMarker.bindPopup('<div class="pop-name">내 위치</div>');
+        leafletMap.setView([lat, lng], 15);
+      },
+      err => {
+        btn.classList.remove('loading');
+        let msg = '위치를 가져올 수 없어요';
+        if (err.code === 1) msg = '위치 권한이 거부됐어요. 브라우저 설정에서 허용해주세요.';
+        else if (err.code === 3) msg = '위치 요청이 너무 오래 걸려요. 다시 시도해주세요.';
+        alert(msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
+  });
 }
 
 function renderMarkers() {
@@ -1703,16 +2119,62 @@ function renderChecklist() {
   `).join('');
   c.querySelectorAll('.checklist-item').forEach(el => {
     const id = el.dataset.id;
-    el.querySelector('.check-area').addEventListener('click', () => {
+    el.querySelector('.checkbox').addEventListener('click', e => {
+      e.stopPropagation();
       const items = loadChecklist();
       const it = items.find(x => x.id === id);
       if (it) { it.checked = !it.checked; saveChecklist(items); renderChecklist(); }
+    });
+    el.querySelector('.checklist-text').addEventListener('click', e => {
+      e.stopPropagation();
+      startChecklistEdit(el, id);
     });
     el.querySelector('.item-delete').addEventListener('click', () => {
       if (!confirm('삭제할까요?')) return;
       saveChecklist(loadChecklist().filter(x => x.id !== id));
       renderChecklist();
     });
+  });
+}
+
+function startChecklistEdit(itemEl, id) {
+  const textEl = itemEl.querySelector('.checklist-text');
+  if (itemEl.classList.contains('editing')) return;
+  itemEl.classList.add('editing');
+
+  const items = loadChecklist();
+  const it = items.find(x => x.id === id);
+  if (!it) return;
+  const oldText = it.text;
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'checklist-edit-input';
+  input.value = oldText;
+  textEl.replaceWith(input);
+  setTimeout(() => { input.focus(); input.select(); }, 10);
+
+  let done = false;
+  function commit() {
+    if (done) return;
+    done = true;
+    const newText = input.value.trim();
+    if (newText && newText !== oldText) {
+      const items = loadChecklist();
+      const it = items.find(x => x.id === id);
+      if (it) { it.text = newText; saveChecklist(items); }
+    }
+    renderChecklist();
+  }
+  function cancel() {
+    if (done) return;
+    done = true;
+    renderChecklist();
+  }
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { e.preventDefault(); cancel(); }
   });
 }
 document.getElementById('addCheckBtn').addEventListener('click', addCheck);
@@ -1749,8 +2211,21 @@ function saveBudget(items) { localStorage.setItem(BUDGET_KEY, JSON.stringify(ite
 function loadPeople() { return parseInt(localStorage.getItem(PEOPLE_KEY) || '2', 10); }
 function savePeople(n) { localStorage.setItem(PEOPLE_KEY, String(n)); }
 
+const RATE_KEY = 'bk-thb-rate';
+function loadRate() { return parseFloat(localStorage.getItem(RATE_KEY) || '40') || 40; }
+function saveRate(r) { localStorage.setItem(RATE_KEY, String(r)); }
+
 function fmtMoney(n) {
   return '₩ ' + (n || 0).toLocaleString('ko-KR');
+}
+function fmtBaht(n) {
+  const rate = loadRate();
+  if (!rate) return '';
+  const baht = Math.round((n || 0) / rate);
+  return '฿ ' + baht.toLocaleString('ko-KR');
+}
+function fmtMoneyDual(n) {
+  return `${fmtMoney(n)} <span class="bi-baht">/ ${fmtBaht(n)}</span>`;
 }
 
 function renderBudget() {
@@ -1770,7 +2245,7 @@ function renderBudget() {
             ${it.includeSplit ? '<span class="bi-tag split-on">인당 포함</span>' : ''}
           </div>
         </div>
-        <div class="bi-amount">${fmtMoney(it.amount)}</div>
+        <div class="bi-amount">${fmtMoneyDual(it.amount)}</div>
         <button class="item-delete" title="삭제">×</button>
       </div>
     `).join('');
@@ -1799,14 +2274,14 @@ function renderBudget() {
   summary.innerHTML = `
     <div class="summary-total">
       <span class="summary-total-label">total</span>
-      <span class="summary-total-value">${fmtMoney(total)}</span>
+      <span class="summary-total-value">${fmtMoneyDual(total)}</span>
     </div>
-    <div class="summary-row"><span class="summary-row-label">법인카드</span><span class="summary-row-value">${fmtMoney(byPayment.corp_card)}</span></div>
-    <div class="summary-row"><span class="summary-row-label">개인카드</span><span class="summary-row-value">${fmtMoney(byPayment.personal_card)}</span></div>
-    <div class="summary-row"><span class="summary-row-label">개인현금</span><span class="summary-row-value">${fmtMoney(byPayment.cash)}</span></div>
+    <div class="summary-row"><span class="summary-row-label">법인카드</span><span class="summary-row-value">${fmtMoneyDual(byPayment.corp_card)}</span></div>
+    <div class="summary-row"><span class="summary-row-label">개인카드</span><span class="summary-row-value">${fmtMoneyDual(byPayment.personal_card)}</span></div>
+    <div class="summary-row"><span class="summary-row-label">개인현금</span><span class="summary-row-value">${fmtMoneyDual(byPayment.cash)}</span></div>
     <div class="summary-per-person">
       <div class="spp-label">per person</div>
-      <div class="spp-value">${fmtMoney(Math.round(perPerson))}</div>
+      <div class="spp-value">${fmtMoneyDual(Math.round(perPerson))}</div>
       <div class="spp-sub">${people}명 기준 · 인당 계산 포함 항목만 (${fmtMoney(splitTotal)})</div>
     </div>
   `;
@@ -1826,15 +2301,58 @@ peopleInput.addEventListener('change', () => {
   renderBudget();
 });
 
+// THB rate
+const rateInput = document.getElementById('thbRate');
+rateInput.value = loadRate();
+rateInput.addEventListener('change', () => {
+  const r = Math.max(0.01, parseFloat(rateInput.value) || 40);
+  rateInput.value = r;
+  saveRate(r);
+  renderBudget();
+});
+
+// Currency toggle
+let inputCurrency = 'KRW';
+const curBtns = document.querySelectorAll('#currencyToggle .cur-btn');
+const amountInput = document.getElementById('bAmount');
+const amountPreview = document.getElementById('amountPreview');
+
+function updateAmountPreview() {
+  const raw = parseFloat(amountInput.value);
+  if (!raw || raw <= 0) { amountPreview.textContent = ''; return; }
+  const rate = loadRate();
+  if (inputCurrency === 'KRW') {
+    const baht = Math.round(raw / rate);
+    amountPreview.textContent = `≈ ฿ ${baht.toLocaleString('ko-KR')}`;
+  } else {
+    const won = Math.round(raw * rate);
+    amountPreview.textContent = `≈ ₩ ${won.toLocaleString('ko-KR')}`;
+  }
+}
+curBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    curBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    inputCurrency = btn.dataset.cur;
+    amountInput.placeholder = inputCurrency === 'KRW' ? '금액 (원)' : '금액 (바트)';
+    updateAmountPreview();
+  });
+});
+amountInput.addEventListener('input', updateAmountPreview);
+
 // Add expense
 document.getElementById('addBudgetBtn').addEventListener('click', () => {
   const name = document.getElementById('bName').value.trim();
-  const amount = parseFloat(document.getElementById('bAmount').value);
+  const raw = parseFloat(amountInput.value);
   const payment = document.getElementById('bPayment').value;
   const includeSplit = splitToggle.classList.contains('on');
 
   if (!name) { alert('비용 이름을 입력해주세요'); return; }
-  if (!amount || amount <= 0) { alert('금액을 입력해주세요'); return; }
+  if (!raw || raw <= 0) { alert('금액을 입력해주세요'); return; }
+
+  // 항상 원(KRW) 기준으로 저장
+  const rate = loadRate();
+  const amount = inputCurrency === 'KRW' ? Math.round(raw) : Math.round(raw * rate);
 
   const items = loadBudget();
   items.push({
@@ -1845,7 +2363,8 @@ document.getElementById('addBudgetBtn').addEventListener('click', () => {
   saveBudget(items);
 
   document.getElementById('bName').value = '';
-  document.getElementById('bAmount').value = '';
+  amountInput.value = '';
+  updateAmountPreview();
   renderBudget();
 });
 
@@ -2015,6 +2534,312 @@ document.addEventListener('keydown', e => {
 });
 
 renderPlaces();
+
+// ---------- Tips (small things) ----------
+const DEFAULT_TIPS = [
+  { id: 't1', label: 'on heat —', body: '12 ~ 16시는 가장 더운 시간. 무조건 호텔. 외출은 7~10시, 17시 이후.' },
+  { id: 't2', label: 'on rain —', body: '6월은 우기. 스콜은 보통 1시간 안에 끝남. 작은 우산이면 충분.' },
+  { id: 't3', label: 'on transport —', body: '러시아워는 평일 7~9시, 16~19시. 이 시간엔 BTS · MRT가 그랩보다 빠름.' },
+  { id: 't4', label: 'on tipping —', body: '마사지는 50~100밧 정도. 식당은 봉사료 포함이라 별도 팁 안 줘도 OK.' },
+  { id: 't5', label: 'on dress code —', body: '사원 가는 일정은 없지만, 혹시 들르면 어깨 · 무릎 가리기. 루프탑 바는 캐주얼 OK.' },
+];
+const TIPS_KEY = 'bk-tips-v1';
+function loadTips() {
+  try {
+    const saved = localStorage.getItem(TIPS_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_TIPS));
+}
+function saveTips() { localStorage.setItem(TIPS_KEY, JSON.stringify(TIPS)); }
+let TIPS = loadTips();
+
+function renderTips() {
+  const c = document.getElementById('tipsContainer');
+  if (!c) return;
+  c.innerHTML = TIPS.map(t => `
+    <div class="tip" data-tip-id="${escapeAttr(t.id)}">
+      <div class="tip-label">${escapeHtml(t.label)}</div>
+      <div class="tip-body">${escapeHtml(t.body)}</div>
+    </div>
+  `).join('');
+  c.querySelectorAll('.tip').forEach(el => {
+    el.addEventListener('click', () => openTipModal(el.dataset.tipId));
+  });
+}
+
+let tipModalState = { mode: null, tipId: null };
+const tipModal = document.getElementById('tipModal');
+const t_label = document.getElementById('t_label');
+const t_body = document.getElementById('t_body');
+const tipModalDeleteBtn = document.getElementById('tipModalDelete');
+
+function openTipModal(tipId) {
+  if (tipId) {
+    const tip = TIPS.find(t => t.id === tipId);
+    if (!tip) return;
+    tipModalState = { mode: 'edit', tipId };
+    document.getElementById('tipModalTitle').textContent = '노트 편집';
+    t_label.value = tip.label || '';
+    t_body.value = tip.body || '';
+    tipModalDeleteBtn.style.display = '';
+  } else {
+    tipModalState = { mode: 'add', tipId: null };
+    document.getElementById('tipModalTitle').textContent = '새 노트';
+    t_label.value = '';
+    t_body.value = '';
+    tipModalDeleteBtn.style.display = 'none';
+  }
+  tipModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => t_label.focus(), 80);
+}
+function closeTipModal() { tipModal.classList.remove('open'); document.body.style.overflow = ''; }
+function saveTipFromModal() {
+  const label = t_label.value.trim();
+  const body = t_body.value.trim();
+  if (!label && !body) { alert('내용을 입력해주세요'); return; }
+  if (tipModalState.mode === 'edit') {
+    const tip = TIPS.find(t => t.id === tipModalState.tipId);
+    if (tip) { tip.label = label; tip.body = body; }
+  } else {
+    TIPS.push({ id: 'tip' + Date.now(), label, body });
+  }
+  saveTips();
+  renderTips();
+  closeTipModal();
+}
+function deleteTipFromModal() {
+  if (tipModalState.mode !== 'edit') return;
+  if (!confirm('이 노트 삭제할까요?')) return;
+  const idx = TIPS.findIndex(t => t.id === tipModalState.tipId);
+  if (idx < 0) return;
+  TIPS.splice(idx, 1);
+  saveTips();
+  renderTips();
+  closeTipModal();
+}
+document.getElementById('tipModalClose').addEventListener('click', closeTipModal);
+document.getElementById('tipModalCancel').addEventListener('click', closeTipModal);
+document.getElementById('tipModalSave').addEventListener('click', saveTipFromModal);
+tipModalDeleteBtn.addEventListener('click', deleteTipFromModal);
+tipModal.addEventListener('click', e => { if (e.target === tipModal) closeTipModal(); });
+document.getElementById('addTipBtn').addEventListener('click', () => openTipModal(null));
+renderTips();
+
+// ---------- Weather Widget (Open-Meteo) ----------
+const BKK_LAT = 13.7563, BKK_LNG = 100.5018;
+const WEATHER_CACHE_KEY = 'bk-weather-cache';
+const WEATHER_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+function weatherIcon(code) {
+  // WMO codes: https://open-meteo.com/en/docs
+  if (code === 0) return '☀️';
+  if (code === 1 || code === 2) return '🌤️';
+  if (code === 3) return '☁️';
+  if (code >= 45 && code <= 48) return '🌫️';
+  if (code >= 51 && code <= 57) return '🌦️';
+  if (code >= 61 && code <= 67) return '🌧️';
+  if (code >= 71 && code <= 77) return '🌨️';
+  if (code >= 80 && code <= 82) return '🌧️';
+  if (code >= 95 && code <= 99) return '⛈️';
+  return '🌤️';
+}
+function weatherDesc(code) {
+  if (code === 0) return 'clear';
+  if (code === 1 || code === 2) return 'mostly clear';
+  if (code === 3) return 'cloudy';
+  if (code >= 45 && code <= 48) return 'foggy';
+  if (code >= 51 && code <= 57) return 'drizzle';
+  if (code >= 61 && code <= 67) return 'rainy';
+  if (code >= 80 && code <= 82) return 'showers';
+  if (code >= 95 && code <= 99) return 'thunderstorm';
+  return 'partly cloudy';
+}
+
+async function fetchWeather() {
+  // Try cache first
+  try {
+    const cached = JSON.parse(localStorage.getItem(WEATHER_CACHE_KEY) || 'null');
+    if (cached && Date.now() - cached.t < WEATHER_TTL_MS) {
+      renderWeather(cached.data);
+      return;
+    }
+  } catch (e) {}
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${BKK_LAT}&longitude=${BKK_LNG}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia/Bangkok&forecast_days=5`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('weather fetch failed');
+    const data = await res.json();
+    localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ t: Date.now(), data }));
+    renderWeather(data);
+  } catch (e) {
+    const w = document.getElementById('weatherWidget');
+    if (w) w.innerHTML = '<div class="weather-loading">날씨 정보를 가져올 수 없어요</div>';
+  }
+}
+
+function renderWeather(data) {
+  const w = document.getElementById('weatherWidget');
+  if (!w || !data) return;
+  const c = data.current;
+  const d = data.daily;
+  const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+  const days = d.time.map((t, i) => {
+    const date = new Date(t + 'T00:00:00');
+    return {
+      label: i === 0 ? 'TODAY' : dayNames[date.getDay()],
+      code: d.weather_code[i],
+      high: Math.round(d.temperature_2m_max[i]),
+      low: Math.round(d.temperature_2m_min[i]),
+      rain: d.precipitation_probability_max[i],
+      isToday: i === 0,
+    };
+  });
+
+  w.innerHTML = `
+    <div class="weather-current">
+      <div class="weather-icon">${weatherIcon(c.weather_code)}</div>
+      <div class="weather-temp">${Math.round(c.temperature_2m)}°</div>
+      <div class="weather-desc">방콕 · ${weatherDesc(c.weather_code)}${days[0].rain != null ? ` · 강수 ${days[0].rain}%` : ''}</div>
+    </div>
+    <div class="weather-forecast">
+      ${days.map(day => `
+        <div class="weather-day ${day.isToday ? 'today' : ''}">
+          <div class="weather-day-label">${day.label}</div>
+          <div class="weather-day-icon">${weatherIcon(day.code)}</div>
+          <div class="weather-day-temp"><span class="high">${day.high}°</span><span class="low">${day.low}°</span></div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+fetchWeather();
+
+// ---------- Auto Exchange Rate (frankfurter.app) ----------
+const RATE_META_KEY = 'bk-rate-meta';
+async function fetchRate() {
+  const btn = document.getElementById('rateFetchBtn');
+  const meta = document.getElementById('rateMeta');
+  btn.classList.add('loading');
+  meta.textContent = '가져오는 중…';
+  try {
+    const res = await fetch('https://api.frankfurter.app/latest?from=THB&to=KRW');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const rate = data.rates && data.rates.KRW;
+    if (!rate) throw new Error();
+    saveRate(rate);
+    document.getElementById('thbRate').value = rate.toFixed(2);
+    const stamp = new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    localStorage.setItem(RATE_META_KEY, stamp);
+    meta.textContent = `자동 업데이트 · ${stamp}`;
+    renderBudget();
+    if (typeof updateAmountPreview === 'function') updateAmountPreview();
+  } catch (e) {
+    meta.textContent = '환율 가져오기 실패 — 수동 입력 가능';
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+document.getElementById('rateFetchBtn').addEventListener('click', fetchRate);
+// 자동 1일 1회 fetch
+(function autoRate() {
+  const lastStamp = localStorage.getItem(RATE_META_KEY);
+  const meta = document.getElementById('rateMeta');
+  if (lastStamp) meta.textContent = `마지막 업데이트 · ${lastStamp}`;
+  const lastTime = parseInt(localStorage.getItem('bk-rate-time') || '0', 10);
+  const ONE_DAY = 24 * 60 * 60 * 1000;
+  if (Date.now() - lastTime > ONE_DAY) {
+    fetchRate();
+    localStorage.setItem('bk-rate-time', String(Date.now()));
+  }
+})();
+
+// ---------- Thai Phrases (with TTS) ----------
+const PHRASES = [
+  { ko: '안녕하세요', th: 'สวัสดีค่ะ / ครับ', roman: 'sa-wat-dee kha / khrap' },
+  { ko: '감사합니다', th: 'ขอบคุณค่ะ / ครับ', roman: 'khop-khun kha / khrap' },
+  { ko: '죄송합니다', th: 'ขอโทษค่ะ / ครับ', roman: 'kho-thot kha / khrap' },
+  { ko: '맵지 않게 해주세요', th: 'ไม่เผ็ดค่ะ / ครับ', roman: 'mai-phet kha / khrap' },
+  { ko: '계산해주세요', th: 'เช็คบิลค่ะ / ครับ', roman: 'check-bin kha / khrap' },
+  { ko: '얼마예요?', th: 'เท่าไหร่คะ / ครับ', roman: 'thao-rai kha / khrap' },
+  { ko: '여기서 내려주세요', th: 'ลงตรงนี้ค่ะ / ครับ', roman: 'long trong nee kha / khrap' },
+  { ko: '화장실 어디예요?', th: 'ห้องน้ำอยู่ที่ไหน', roman: 'hong-nam yu thee nai' },
+  { ko: '물 한 잔 주세요', th: 'ขอน้ำเปล่าหนึ่งแก้ว', roman: 'kho nam-plao neung kaeo' },
+  { ko: '아이스 없이요', th: 'ไม่ใส่น้ำแข็ง', roman: 'mai-sai nam-khaeng' },
+  { ko: '맛있어요', th: 'อร่อย', roman: 'a-roi' },
+  { ko: '괜찮아요', th: 'ไม่เป็นไร', roman: 'mai-pen-rai' },
+];
+
+function renderPhrases() {
+  const c = document.getElementById('phraseList');
+  if (!c) return;
+  c.innerHTML = PHRASES.map((p, i) => `
+    <div class="phrase-item" data-idx="${i}">
+      <div>
+        <div class="phrase-ko">${escapeHtml(p.ko)}</div>
+        <div class="phrase-th">${escapeHtml(p.th)}</div>
+        <div class="phrase-roman">${escapeHtml(p.roman)}</div>
+      </div>
+      <button class="phrase-play" type="button" aria-label="재생">▶</button>
+    </div>
+  `).join('');
+
+  c.querySelectorAll('.phrase-item').forEach(el => {
+    const play = el.querySelector('.phrase-play');
+    const speak = e => {
+      e && e.stopPropagation();
+      const idx = parseInt(el.dataset.idx, 10);
+      speakThai(PHRASES[idx].th, play);
+    };
+    el.addEventListener('click', speak);
+    play.addEventListener('click', speak);
+  });
+}
+
+function speakThai(text, btnEl) {
+  if (!('speechSynthesis' in window)) {
+    alert('이 브라우저는 음성 재생을 지원하지 않아요');
+    return;
+  }
+  // 기존 재생 중지
+  window.speechSynthesis.cancel();
+  document.querySelectorAll('.phrase-play.speaking').forEach(b => {
+    b.classList.remove('speaking');
+    b.textContent = '▶';
+  });
+
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'th-TH';
+  u.rate = 0.85;
+  // 태국어 voice 우선
+  const voices = window.speechSynthesis.getVoices();
+  const thVoice = voices.find(v => v.lang === 'th-TH' || v.lang.startsWith('th'));
+  if (thVoice) u.voice = thVoice;
+
+  if (btnEl) {
+    btnEl.classList.add('speaking');
+    btnEl.textContent = '◼';
+  }
+  u.onend = () => {
+    if (btnEl) {
+      btnEl.classList.remove('speaking');
+      btnEl.textContent = '▶';
+    }
+  };
+  u.onerror = u.onend;
+  window.speechSynthesis.speak(u);
+}
+
+// voices가 비동기 로드되는 경우 대비
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => {};
+}
+renderPhrases();
 
 // ---------- Utility ----------
 function escapeHtml(str) {
