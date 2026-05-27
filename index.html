@@ -714,6 +714,177 @@ body {
   min-height: 14px;
 }
 
+/* ============ Translate ============ */
+.translate-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lang-bar {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  gap: 6px;
+  align-items: center;
+}
+.lang-select {
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  color: var(--text);
+  outline: none;
+  border-radius: 2px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%238a8a82' fill='none' stroke-width='1'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 30px;
+  cursor: pointer;
+}
+.lang-select:focus { border-color: var(--text); }
+.lang-swap {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  margin: 0 auto;
+  transition: all 0.15s;
+}
+.lang-swap:hover { border-color: var(--text); color: var(--text); transform: rotate(180deg); }
+
+.translate-io {
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.translate-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 14px 14px 8px;
+  color: var(--text);
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.55;
+}
+.translate-input::placeholder { color: var(--soft); }
+.translate-toolbar {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px 8px;
+  border-top: 1px solid var(--line);
+  align-items: center;
+}
+.tr-btn {
+  background: none;
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.tr-btn:hover { border-color: var(--text); color: var(--text); }
+.tr-btn.primary {
+  width: auto;
+  padding: 0 18px;
+  border-radius: 18px;
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  margin-left: auto;
+}
+.tr-btn.primary:hover { opacity: 0.85; }
+.tr-btn.listening {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: white;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.translate-output {
+  border: 1px solid var(--line);
+  background: var(--rest-bg);
+  border-radius: 2px;
+  padding: 14px;
+  min-height: 60px;
+  position: relative;
+}
+.tr-placeholder {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--soft);
+  font-size: 13px;
+}
+.tr-result {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--text);
+  padding-right: 44px;
+}
+.tr-result-play {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.tr-result-play:hover { border-color: var(--text); }
+.tr-result-play.speaking { background: var(--text); color: var(--bg); }
+.tr-loading {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+.translate-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.tr-link {
+  background: none;
+  border: 1px dashed var(--line-strong);
+  color: var(--muted);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  padding: 11px 14px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+  text-align: left;
+}
+.tr-link:hover { border-color: var(--text); color: var(--text); background: var(--rest-bg); }
+
 /* ============ Phrase List ============ */
 .phrase-list {
   display: flex;
@@ -1327,10 +1498,49 @@ body {
 
 <!-- ============ TAB: Notes ============ -->
 <section class="tab" data-tab="notes">
-  <div class="section-label">directory</div>
-  <h2 class="section-title">places</h2>
+  <div class="section-label">translate</div>
+  <h2 class="section-title">say it</h2>
 
-  <div id="placesContainer"></div>
+  <div class="translate-box">
+    <div class="lang-bar">
+      <select id="srcLang" class="lang-select">
+        <option value="ko" selected>한국어</option>
+        <option value="th">태국어</option>
+        <option value="en">English</option>
+      </select>
+      <button class="lang-swap" id="langSwap" type="button" aria-label="swap">⇄</button>
+      <select id="tgtLang" class="lang-select">
+        <option value="ko">한국어</option>
+        <option value="th" selected>태국어</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+
+    <div class="translate-io">
+      <textarea id="trInput" class="translate-input" placeholder="번역할 문장을 입력하거나 🎤 눌러 말하기" rows="2"></textarea>
+      <div class="translate-toolbar">
+        <button class="tr-btn" id="trMicBtn" type="button" title="음성 입력">🎤</button>
+        <button class="tr-btn" id="trClearBtn" type="button" title="지우기">✕</button>
+        <button class="tr-btn primary" id="trGoBtn" type="button">번역</button>
+      </div>
+    </div>
+
+    <div class="translate-output" id="trOutput">
+      <div class="tr-placeholder">결과가 여기에 나타나요</div>
+    </div>
+
+    <div class="translate-tools">
+      <button class="tr-link" id="openGoogleCam" type="button">📷 카메라로 번역 (구글 번역 열기)</button>
+      <button class="tr-link" id="openGoogleFull" type="button">↗ 구글 번역에서 열기</button>
+    </div>
+  </div>
+
+  <div style="margin-top: 64px">
+    <div class="section-label">directory</div>
+    <h2 class="section-title">places</h2>
+
+    <div id="placesContainer"></div>
+  </div>
 
   <div style="margin-top: 64px">
     <div class="section-label">phrases</div>
@@ -2800,34 +3010,39 @@ function renderPhrases() {
   });
 }
 
-function speakThai(text, btnEl) {
+function speakThai(text, btnEl) { speakLang(text, 'th-TH', btnEl); }
+
+function speakLang(text, lang, btnEl) {
   if (!('speechSynthesis' in window)) {
     alert('이 브라우저는 음성 재생을 지원하지 않아요');
     return;
   }
   // 기존 재생 중지
   window.speechSynthesis.cancel();
-  document.querySelectorAll('.phrase-play.speaking').forEach(b => {
+  document.querySelectorAll('.phrase-play.speaking, .tr-result-play.speaking').forEach(b => {
     b.classList.remove('speaking');
-    b.textContent = '▶';
+    if (b.classList.contains('phrase-play')) b.textContent = '▶';
+    else b.textContent = '🔊';
   });
 
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'th-TH';
+  u.lang = lang;
   u.rate = 0.85;
-  // 태국어 voice 우선
   const voices = window.speechSynthesis.getVoices();
-  const thVoice = voices.find(v => v.lang === 'th-TH' || v.lang.startsWith('th'));
-  if (thVoice) u.voice = thVoice;
+  const langPrefix = lang.split('-')[0];
+  const voice = voices.find(v => v.lang === lang) || voices.find(v => v.lang.startsWith(langPrefix));
+  if (voice) u.voice = voice;
 
   if (btnEl) {
     btnEl.classList.add('speaking');
-    btnEl.textContent = '◼';
+    if (btnEl.classList.contains('phrase-play')) btnEl.textContent = '◼';
+    else btnEl.textContent = '◼';
   }
   u.onend = () => {
     if (btnEl) {
       btnEl.classList.remove('speaking');
-      btnEl.textContent = '▶';
+      if (btnEl.classList.contains('phrase-play')) btnEl.textContent = '▶';
+      else btnEl.textContent = '🔊';
     }
   };
   u.onerror = u.onend;
@@ -2840,6 +3055,153 @@ if ('speechSynthesis' in window) {
   window.speechSynthesis.onvoiceschanged = () => {};
 }
 renderPhrases();
+
+// ---------- Translate ----------
+const langToBCP = { ko: 'ko-KR', th: 'th-TH', en: 'en-US' };
+const srcLang = document.getElementById('srcLang');
+const tgtLang = document.getElementById('tgtLang');
+const trInput = document.getElementById('trInput');
+const trOutput = document.getElementById('trOutput');
+const trMicBtn = document.getElementById('trMicBtn');
+const trGoBtn = document.getElementById('trGoBtn');
+const trClearBtn = document.getElementById('trClearBtn');
+
+document.getElementById('langSwap').addEventListener('click', () => {
+  const s = srcLang.value, t = tgtLang.value;
+  srcLang.value = t;
+  tgtLang.value = s;
+});
+
+trClearBtn.addEventListener('click', () => {
+  trInput.value = '';
+  trOutput.innerHTML = '<div class="tr-placeholder">결과가 여기에 나타나요</div>';
+  trInput.focus();
+});
+
+async function doTranslate() {
+  const text = trInput.value.trim();
+  if (!text) { trInput.focus(); return; }
+  const src = srcLang.value, tgt = tgtLang.value;
+  if (src === tgt) {
+    trOutput.innerHTML = '<div class="tr-placeholder">같은 언어를 선택했어요</div>';
+    return;
+  }
+
+  trOutput.innerHTML = '<div class="tr-loading">번역하는 중…</div>';
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${tgt}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const translated = data.responseData && data.responseData.translatedText;
+    if (!translated) throw new Error();
+
+    trOutput.innerHTML = `
+      <div class="tr-result">${escapeHtml(translated)}</div>
+      <button class="tr-result-play" id="trPlayBtn" type="button" aria-label="재생">🔊</button>
+    `;
+    const playBtn = document.getElementById('trPlayBtn');
+    playBtn.addEventListener('click', () => {
+      speakLang(translated, langToBCP[tgt] || 'en-US', playBtn);
+    });
+  } catch (e) {
+    trOutput.innerHTML = `
+      <div class="tr-result" style="color:var(--muted);font-size:14px">번역 실패. 인터넷 연결 확인 또는 구글 번역으로 열어보세요.</div>
+    `;
+  }
+}
+trGoBtn.addEventListener('click', doTranslate);
+trInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault();
+    doTranslate();
+  }
+});
+
+// ---------- Voice Input (Web Speech Recognition) ----------
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let isListening = false;
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+}
+
+trMicBtn.addEventListener('click', () => {
+  if (!SpeechRecognition) {
+    alert('이 브라우저는 음성 인식을 지원하지 않아요.\n(Chrome, Safari 14.5+ 권장)');
+    return;
+  }
+  if (isListening) {
+    recognition.stop();
+    return;
+  }
+  recognition.lang = langToBCP[srcLang.value] || 'ko-KR';
+  trInput.value = '';
+  try {
+    recognition.start();
+  } catch (e) {
+    return;
+  }
+});
+
+if (recognition) {
+  recognition.onstart = () => {
+    isListening = true;
+    trMicBtn.classList.add('listening');
+  };
+  recognition.onresult = (event) => {
+    let transcript = '';
+    for (let i = 0; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    trInput.value = transcript;
+  };
+  recognition.onerror = (e) => {
+    isListening = false;
+    trMicBtn.classList.remove('listening');
+    if (e.error === 'not-allowed') alert('마이크 권한이 필요해요. 브라우저 설정에서 허용해주세요.');
+  };
+  recognition.onend = () => {
+    isListening = false;
+    trMicBtn.classList.remove('listening');
+    // 자동 번역
+    if (trInput.value.trim()) setTimeout(doTranslate, 200);
+  };
+}
+
+// ---------- Google Translate Deep Links ----------
+function openGoogleTranslate(useCamera) {
+  const src = srcLang.value, tgt = tgtLang.value;
+  const text = trInput.value.trim();
+
+  // 모바일 앱 deep link 시도 (iOS / Android)
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (isMobile && useCamera) {
+    // 카메라는 앱이 있을 때만 동작. 앱이 없으면 웹으로 fallback.
+    // iOS / Android 모두 googletranslate:// scheme 시도
+    const appUrl = `googletranslate://?sl=${src}&tl=${tgt}`;
+    const webUrl = `https://translate.google.com/?sl=${src}&tl=${tgt}&op=images`;
+    // 앱 열기 시도 후 짧게 기다린 뒤 웹으로
+    const start = Date.now();
+    window.location.href = appUrl;
+    setTimeout(() => {
+      if (Date.now() - start < 2000) window.open(webUrl, '_blank');
+    }, 800);
+    return;
+  }
+
+  // 일반 텍스트 번역 → translate.google.com
+  const params = new URLSearchParams({ sl: src, tl: tgt, op: 'translate' });
+  if (text) params.set('text', text);
+  window.open(`https://translate.google.com/?${params}`, '_blank');
+}
+
+document.getElementById('openGoogleCam').addEventListener('click', () => openGoogleTranslate(true));
+document.getElementById('openGoogleFull').addEventListener('click', () => openGoogleTranslate(false));
 
 // ---------- Utility ----------
 function escapeHtml(str) {

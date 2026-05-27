@@ -1,7 +1,7 @@
 // Bangkok Trip — Service Worker
 // 캐시 전략: app shell + 동적 리소스 stale-while-revalidate
 // 캐시 버전 (HTML 업데이트할 때마다 숫자 올리면 사용자 폰에서 새로 받음)
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `bangkok-${CACHE_VERSION}`;
 
 // 앱 핵심 리소스 (설치 시 미리 캐시)
@@ -42,8 +42,8 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(req.url);
 
-  // 1) 외부 API (날씨, 환율) — Network first, fallback to cache
-  if (url.host === 'api.open-meteo.com' || url.host === 'api.frankfurter.app') {
+  // 1) 외부 API (날씨, 환율, 번역) — Network first, fallback to cache
+  if (url.host === 'api.open-meteo.com' || url.host === 'api.frankfurter.app' || url.host === 'api.mymemory.translated.net') {
     event.respondWith(
       fetch(req).then(res => {
         const clone = res.clone();
